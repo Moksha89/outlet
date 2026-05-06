@@ -241,6 +241,12 @@ function Login({ onLogin }: { onLogin: (token: string, user: User) => void }) {
         <img src="/logo.png" alt="Andhrawala logo" />
         <h1>Andhrawala</h1>
         <p>Liquor outlet ordering, billing, stock, payments, and profit reporting.</p>
+        <div className="landingActions">
+          <a className="downloadButton" href="/download/andhrawala.apk" download>
+            Download Android App
+          </a>
+          <span>Install APK from this server, then login below.</span>
+        </div>
         {error ? <div className="alert">{error}</div> : null}
         <label>Phone<input value={phone} onChange={(e) => setPhone(e.target.value)} /></label>
         <label>Password<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} /></label>
