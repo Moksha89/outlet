@@ -20,8 +20,21 @@ initFirebase();
 
 const app = express();
 const server = createServer(app);
+const allowedOrigins = [
+  ...(process.env.WEB_ORIGIN ?? '').split(','),
+  'http://localhost:5173',
+  'http://localhost',
+  'capacitor://localhost',
+  'http://155.117.46.249',
+]
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const corsOrigin: cors.CorsOptions['origin'] = (origin, callback) => {
+  if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+  return callback(new Error(`Origin ${origin} is not allowed by CORS`));
+};
 const io = new Server(server, {
-  cors: { origin: process.env.WEB_ORIGIN ?? 'http://localhost:5173' },
+  cors: { origin: corsOrigin },
 });
 setRealtime(io);
 
@@ -29,7 +42,7 @@ const uploadDir = path.resolve(process.cwd(), 'uploads');
 mkdirSync(uploadDir, { recursive: true });
 const upload = multer({ dest: uploadDir, limits: { fileSize: 10 * 1024 * 1024 } });
 
-app.use(cors({ origin: process.env.WEB_ORIGIN ?? true, credentials: true }));
+app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(express.json({ limit: '2mb' }));
 app.use('/uploads', express.static(uploadDir));
 
