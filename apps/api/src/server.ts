@@ -26,6 +26,8 @@ const allowedOrigins = [
   'http://localhost',
   'capacitor://localhost',
   'http://155.117.46.249',
+  'http://outlet.andhrawala.ae',
+  'https://outlet.andhrawala.ae',
 ]
   .map((origin) => origin.trim())
   .filter(Boolean);
