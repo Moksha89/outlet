@@ -6,10 +6,12 @@ import {
   IndianRupee,
   LayoutDashboard,
   LogOut,
+  Menu,
   PackagePlus,
   ReceiptText,
   ShoppingCart,
   TrendingUp,
+  X,
 } from 'lucide-react';
 import type { Socket } from 'socket.io-client';
 
@@ -55,6 +57,7 @@ export function App() {
   const [notifications, setNotifications] = useState<NotificationRow[]>([]);
   const [profit, setProfit] = useState<ProfitReport | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => setToken(tokenValue), [tokenValue]);
 
@@ -110,6 +113,8 @@ export function App() {
     () => products.filter((p) => p.current_stock_bottles <= p.minimum_stock_bottles),
     [products],
   );
+  const visibleTabs = tabs.filter((item) => user?.role === 'ADMIN' || item.id !== 'reports');
+  const ActiveIcon = visibleTabs.find((item) => item.id === tab)?.icon ?? LayoutDashboard;
 
   if (!user || !tokenValue) {
     return <Login onLogin={(nextToken, nextUser) => {
@@ -121,7 +126,7 @@ export function App() {
   }
 
   return (
-    <div className="appShell">
+    <div className={menuOpen ? 'appShell menuOpen' : 'appShell'}>
       <aside className="sidebar">
         <div className="brand">
           <img src="/logo.png" alt="Andhrawala" />
@@ -129,20 +134,25 @@ export function App() {
             <strong>Andhrawala</strong>
             <span>Bar & Restaurant</span>
           </div>
+          <button className="iconButton closeMenu" onClick={() => setMenuOpen(false)} aria-label="Close menu">
+            <X size={18} />
+          </button>
         </div>
-        <nav>
-          {tabs
-            .filter((item) => user.role === 'ADMIN' || item.id !== 'reports')
+        <nav className="sideNav">
+          {visibleTabs
             .map((item) => {
               const Icon = item.icon;
               return (
                 <button
                   key={item.id}
                   className={tab === item.id ? 'active' : ''}
-                  onClick={() => setTab(item.id)}
+                  onClick={() => {
+                    setTab(item.id);
+                    setMenuOpen(false);
+                  }}
                 >
-                  <Icon size={18} />
-                  {item.label}
+                  <Icon size={17} />
+                  <span>{item.label}</span>
                 </button>
               );
             })}
@@ -159,7 +169,23 @@ export function App() {
           Logout
         </button>
       </aside>
+      <button className="menuScrim" onClick={() => setMenuOpen(false)} aria-label="Close menu" />
       <main>
+        <header className="mobileHeader">
+          <button className="iconButton" onClick={() => setMenuOpen(true)} aria-label="Open menu">
+            <Menu size={20} />
+          </button>
+          <div className="mobileBrand">
+            <img src="/logo.png" alt="Andhrawala" />
+            <div>
+              <strong>Andhrawala</strong>
+              <span>{user.role === 'ADMIN' ? 'Admin' : 'Outlet'}</span>
+            </div>
+          </div>
+          <button className="iconButton" onClick={() => setTab('notifications')} aria-label="Notifications">
+            <Bell size={19} />
+          </button>
+        </header>
         <header className="topbar">
           <div>
             <p>{user.role === 'ADMIN' ? 'Admin Control Center' : 'Outlet Ordering Portal'}</p>
@@ -167,6 +193,25 @@ export function App() {
           </div>
           <div className="chip">{user.name}</div>
         </header>
+        <div className="quickTabs">
+          {visibleTabs.slice(0, 5).map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                className={tab === item.id ? 'active' : ''}
+                onClick={() => setTab(item.id)}
+              >
+                <Icon size={15} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+          <button className="moreTab" onClick={() => setMenuOpen(true)}>
+            <ActiveIcon size={15} />
+            <span>Menu</span>
+          </button>
+        </div>
         {error ? <div className="alert">{error}</div> : null}
         {tab === 'dashboard' && dashboard ? (
           <DashboardView dashboard={dashboard} lowStock={lowStock} user={user} />
