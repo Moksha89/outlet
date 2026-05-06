@@ -1,0 +1,228 @@
+:root {
+  --black: #0B0B0B;
+  --white: #FFFFFF;
+  --gold: #D4AF37;
+  --dark-gold: #B8860B;
+  --light: #F5F5F5;
+  --text-grey: #777777;
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: radial-gradient(circle at top left, #332700 0, var(--black) 28%, #030303 100%);
+  color: var(--white);
+}
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+
+.loginPage {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+.loginCard {
+  width: min(440px, 100%);
+  padding: 36px;
+  border: 1px solid rgba(212, 175, 55, .45);
+  border-radius: 28px;
+  background: rgba(11, 11, 11, .88);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .55);
+}
+.loginCard img {
+  display: block;
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin: 0 auto 18px;
+  border: 2px solid var(--gold);
+}
+.loginCard h1 { margin: 0; text-align: center; font-size: 38px; color: var(--gold); }
+.loginCard p { color: #ddd; text-align: center; }
+label { color: #ddd; display: grid; gap: 8px; }
+input, select {
+  width: 100%;
+  border: 1px solid rgba(212, 175, 55, .35);
+  background: #151515;
+  color: var(--white);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.loginCard label { margin-top: 14px; }
+.goldButton {
+  border: 0;
+  border-radius: 999px;
+  padding: 13px 18px;
+  background: linear-gradient(135deg, var(--gold), var(--dark-gold));
+  color: #111;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 18px;
+}
+.goldButton.small { padding: 9px 14px; margin: 0; }
+
+.appShell { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  padding: 22px;
+  background: rgba(0, 0, 0, .92);
+  border-right: 1px solid rgba(212, 175, 55, .35);
+}
+.brand { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+.brand img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--gold);
+}
+.brand strong { display: block; color: var(--gold); font-size: 22px; }
+.brand span { color: #cfcfcf; font-size: 13px; }
+nav { display: grid; gap: 8px; }
+nav button, .logout {
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #eee;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+nav button.active, nav button:hover, .logout:hover {
+  border-color: rgba(212, 175, 55, .55);
+  background: rgba(212, 175, 55, .12);
+  color: var(--gold);
+}
+.logout { position: absolute; left: 22px; right: 22px; bottom: 22px; width: calc(100% - 44px); }
+
+main { padding: 26px; overflow: auto; }
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+.topbar p { margin: 0 0 6px; color: var(--gold); text-transform: uppercase; letter-spacing: .12em; font-size: 12px; }
+.topbar h1 { margin: 0; font-size: 34px; }
+.chip {
+  border: 1px solid rgba(212, 175, 55, .45);
+  color: var(--gold);
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, .35);
+}
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.statCard, .panel {
+  background: var(--white);
+  color: #111;
+  border: 1px solid rgba(212, 175, 55, .55);
+  border-radius: 22px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, .22);
+}
+.statCard { padding: 18px; }
+.statCard p { margin: 0 0 8px; color: var(--text-grey); }
+.statCard strong { font-size: 28px; color: var(--black); }
+.panel { padding: 22px; margin-bottom: 22px; }
+.sectionHeader { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.sectionHeader h2, .panel h2 { margin-top: 0; }
+.productGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 16px; }
+.productCard {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid #eee;
+  border-radius: 18px;
+  background: #fff;
+}
+.productCard img, .imagePlaceholder {
+  width: 100px;
+  height: 126px;
+  border-radius: 14px;
+  object-fit: cover;
+  border: 1px solid rgba(212, 175, 55, .45);
+  background: var(--light);
+  display: grid;
+  place-items: center;
+  color: var(--text-grey);
+}
+.productCard h3 { margin: 0 0 4px; }
+.productCard p { margin: 5px 0; color: var(--text-grey); }
+.priceRow { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.priceRow span {
+  color: #111;
+  border: 1px solid rgba(212, 175, 55, .45);
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: #fff9e6;
+  font-weight: 700;
+  font-size: 12px;
+}
+.table { display: grid; gap: 10px; }
+.tr {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #eee;
+  border-radius: 14px;
+  padding: 12px;
+  background: #fff;
+}
+.tr small { display: block; color: var(--text-grey); margin-top: 4px; }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.actions button {
+  border: 1px solid rgba(212, 175, 55, .5);
+  border-radius: 999px;
+  background: #fff9e6;
+  padding: 7px 9px;
+}
+.inlineForm, .formGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+.formGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+.formGrid label { color: #111; }
+.panel input, .panel select { background: var(--light); color: #111; border-color: #ddd; }
+.muted { color: var(--text-grey); }
+.warning { color: var(--warning); font-weight: 800; }
+.danger, .alert { color: var(--danger); }
+.alert {
+  background: #fff1f1;
+  border: 1px solid #ffd1d1;
+  padding: 12px;
+  border-radius: 14px;
+  margin-bottom: 14px;
+}
+@media (max-width: 980px) {
+  .appShell { grid-template-columns: 1fr; }
+  .sidebar { position: static; height: auto; }
+  .logout { position: static; width: 100%; margin-top: 16px; }
+  .statsGrid, .inlineForm, .formGrid { grid-template-columns: 1fr 1fr; }
+  .tr { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  main { padding: 16px; }
+  .statsGrid, .inlineForm, .formGrid, .productCard { grid-template-columns: 1fr; }
+}
