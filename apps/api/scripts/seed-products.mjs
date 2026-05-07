@@ -18,7 +18,8 @@ const imageSources = JSON.parse(readFileSync(resolve('./src/catalog/product-imag
 const sourceByName = new Map(imageSources.map((row) => [row.product_name, row.image_source_url]));
 
 function imageExtension(url) {
-  const clean = url.toLowerCase().split('?')[0];
+  const parsed = new URL(url);
+  const clean = (parsed.searchParams.get('filename') ?? parsed.pathname).toLowerCase();
   if (clean.endsWith('.png')) return 'png';
   if (clean.endsWith('.webp')) return 'webp';
   if (clean.endsWith('.gif')) return 'gif';
