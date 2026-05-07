@@ -413,9 +413,9 @@ function ProductForm({ product, onSaved }: { product?: Product; onSaved: () => P
           />
         </label>
       ))}
-      <label>Default Bottle Count<input name="current_stock_bottles" type="number" min="0" step="0.01" defaultValue={product?.current_stock_bottles ?? 0} /></label>
       <label>Bottle Purchase Price<input name="purchase_price_per_bottle" type="number" min="0" step="0.01" defaultValue={product?.purchase_price_per_bottle ?? 0} /></label>
       <label>Bottle Selling Price<input name="selling_price_per_bottle" type="number" min="0" step="0.01" defaultValue={product?.selling_price_per_bottle ?? 0} /></label>
+      <input name="current_stock_bottles" type="hidden" value="0" />
       {unitFields.map(([label, countField, purchaseField, sellingField]) => (
         <fieldset className="unitFieldset" key={label}>
           <legend>{label}</legend>

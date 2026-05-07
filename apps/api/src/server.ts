@@ -212,7 +212,7 @@ const productSchema = z.object({
   liter_purchase_price: z.coerce.number().nonnegative().default(0),
   liter_selling_price: z.coerce.number().nonnegative().default(0),
   liter_bottles_count: z.coerce.number().nonnegative().default(0),
-  current_stock_bottles: z.coerce.number().nonnegative().default(0),
+  current_stock_bottles: z.coerce.number().nonnegative().optional().default(0),
   minimum_stock_bottles: z.coerce.number().nonnegative().default(0),
   barcode: z.string().optional().nullable(),
   status: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE'),
@@ -426,7 +426,7 @@ function stockMl(product: Product, stock: z.infer<typeof stockSchema>): number {
 function productStockMl(product: z.infer<typeof productSchema>): number {
   return (
     product.carton_stock_count * product.bottles_per_carton * product.size_ml +
-    (product.full_bottles_count + product.current_stock_bottles) * product.size_ml +
+    product.full_bottles_count * product.size_ml +
     product.half_bottles_count * (product.size_ml / 2) +
     product.quarter_bottles_count * (product.size_ml / 4) +
     product.liter_bottles_count * 1000
