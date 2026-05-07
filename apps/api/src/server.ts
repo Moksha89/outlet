@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import bcrypt from 'bcryptjs';
 import cors from 'cors';
 import express from 'express';
 import { createServer } from 'node:http';
@@ -20,8 +21,23 @@ initFirebase();
 
 const app = express();
 const server = createServer(app);
+const allowedOrigins = [
+  ...(process.env.WEB_ORIGIN ?? '').split(','),
+  'http://localhost:5173',
+  'http://localhost',
+  'capacitor://localhost',
+  'http://155.117.46.249',
+  'http://outlet.andhrawala.ae',
+  'https://outlet.andhrawala.ae',
+]
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const corsOrigin: cors.CorsOptions['origin'] = (origin, callback) => {
+  if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+  return callback(new Error(`Origin ${origin} is not allowed by CORS`));
+};
 const io = new Server(server, {
-  cors: { origin: process.env.WEB_ORIGIN ?? 'http://localhost:5173' },
+  cors: { origin: corsOrigin },
 });
 setRealtime(io);
 
@@ -29,7 +45,7 @@ const uploadDir = path.resolve(process.cwd(), 'uploads');
 mkdirSync(uploadDir, { recursive: true });
 const upload = multer({ dest: uploadDir, limits: { fileSize: 10 * 1024 * 1024 } });
 
-app.use(cors({ origin: process.env.WEB_ORIGIN ?? true, credentials: true }));
+app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(express.json({ limit: '2mb' }));
 app.use('/uploads', express.static(uploadDir));
 
@@ -112,6 +128,67 @@ app.get('/v1/outlets', requireAuth, requireRole('ADMIN'), (_req, res) => {
   res.json(db.prepare('SELECT * FROM outlets ORDER BY name').all());
 });
 
+const outletSchema = z.object({
+  name: z.string().min(1),
+  phone: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  credit_limit: z.coerce.number().nonnegative().default(0),
+  password: z.string().min(6).optional(),
+});
+
+app.post('/v1/outlets', requireAuth, requireRole('ADMIN'), (req, res) => {
+  const parsed = outletSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  const id = uuid();
+  const data = parsed.data;
+  db.prepare('INSERT INTO outlets (id, name, phone, address, credit_limit, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(id, data.name, data.phone ?? null, data.address ?? null, data.credit_limit, nowIso());
+  if (data.phone) {
+    const existing = db.prepare('SELECT id FROM users WHERE phone = ?').get(data.phone);
+    if (!existing) {
+      db.prepare(
+        'INSERT INTO users (id, name, phone, password_hash, role, outlet_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      ).run(uuid(), data.name, data.phone, bcrypt.hashSync(data.password ?? '123456', 10), 'OUTLET', id, nowIso());
+    }
+  }
+  const outlet = db.prepare('SELECT * FROM outlets WHERE id = ?').get(id);
+  void notify({ title: 'New Outlet Created', message: `${data.name} outlet account was created.`, type: 'ALERT' });
+  emitBusinessUpdate('outlet.created', outlet);
+  res.status(201).json(outlet);
+});
+
+app.patch('/v1/outlets/:id', requireAuth, requireRole('ADMIN'), (req, res) => {
+  const parsed = outletSchema.omit({ password: true }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  const existing = db.prepare('SELECT * FROM outlets WHERE id = ?').get(req.params.id);
+  if (!existing) return res.status(404).json({ error: 'outlet not found' });
+  const data = parsed.data;
+  db.prepare('UPDATE outlets SET name = ?, phone = ?, address = ?, credit_limit = ? WHERE id = ?')
+    .run(data.name, data.phone ?? null, data.address ?? null, data.credit_limit, req.params.id);
+  db.prepare('UPDATE users SET name = ?, phone = ? WHERE outlet_id = ? AND role = ?')
+    .run(data.name, data.phone ?? null, req.params.id, 'OUTLET');
+  const outlet = db.prepare('SELECT * FROM outlets WHERE id = ?').get(req.params.id);
+  emitBusinessUpdate('outlet.updated', outlet);
+  res.json(outlet);
+});
+
+app.post('/v1/outlets/:id/password', requireAuth, requireRole('ADMIN'), (req, res) => {
+  const parsed = z.object({ password: z.string().min(6) }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  const outlet = db.prepare('SELECT * FROM outlets WHERE id = ?').get(req.params.id) as { id: string; name: string; phone: string | null } | undefined;
+  if (!outlet) return res.status(404).json({ error: 'outlet not found' });
+  if (!outlet.phone) return res.status(400).json({ error: 'outlet login phone required before setting password' });
+  const hash = bcrypt.hashSync(parsed.data.password, 10);
+  const user = db.prepare('SELECT id FROM users WHERE outlet_id = ? AND role = ?').get(outlet.id, 'OUTLET') as { id: string } | undefined;
+  if (user) {
+    db.prepare('UPDATE users SET name = ?, phone = ?, password_hash = ? WHERE id = ?').run(outlet.name, outlet.phone, hash, user.id);
+  } else {
+    db.prepare('INSERT INTO users (id, name, phone, password_hash, role, outlet_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+      .run(uuid(), outlet.name, outlet.phone, hash, 'OUTLET', outlet.id, nowIso());
+  }
+  res.json({ ok: true });
+});
+
 const productSchema = z.object({
   product_name: z.string().min(1),
   brand: z.string().min(1),
@@ -122,10 +199,20 @@ const productSchema = z.object({
   selling_price_per_bottle: z.coerce.number().nonnegative(),
   carton_purchase_price: z.coerce.number().nonnegative(),
   carton_selling_price: z.coerce.number().nonnegative(),
+  carton_stock_count: z.coerce.number().nonnegative().default(0),
+  full_purchase_price: z.coerce.number().nonnegative().default(0),
   full_price: z.coerce.number().nonnegative(),
+  full_bottles_count: z.coerce.number().nonnegative().default(0),
+  half_purchase_price: z.coerce.number().nonnegative().default(0),
   half_price: z.coerce.number().nonnegative(),
+  half_bottles_count: z.coerce.number().nonnegative().default(0),
+  quarter_purchase_price: z.coerce.number().nonnegative().default(0),
   quarter_price: z.coerce.number().nonnegative(),
-  current_stock_bottles: z.coerce.number().nonnegative().default(0),
+  quarter_bottles_count: z.coerce.number().nonnegative().default(0),
+  liter_purchase_price: z.coerce.number().nonnegative().default(0),
+  liter_selling_price: z.coerce.number().nonnegative().default(0),
+  liter_bottles_count: z.coerce.number().nonnegative().default(0),
+  current_stock_bottles: z.coerce.number().nonnegative().optional().default(0),
   minimum_stock_bottles: z.coerce.number().nonnegative().default(0),
   barcode: z.string().optional().nullable(),
   status: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE'),
@@ -148,14 +235,19 @@ app.post(
     const data = parsed.data;
     const bottleImage = files.bottle_image?.[0]?.filename ? `/uploads/${files.bottle_image[0].filename}` : null;
     const cartonImage = files.carton_image?.[0]?.filename ? `/uploads/${files.carton_image[0].filename}` : null;
-    const currentStockMl = data.current_stock_bottles * data.size_ml;
+    const currentStockMl = productStockMl(data);
+    const currentStockBottles = currentStockMl / data.size_ml;
     db.prepare(`
       INSERT INTO products (
         id, product_name, brand, category, size_ml, bottle_image_url, carton_image_url,
         bottles_per_carton, purchase_price_per_bottle, selling_price_per_bottle,
-        carton_purchase_price, carton_selling_price, full_price, half_price, quarter_price,
+        carton_purchase_price, carton_selling_price, carton_stock_count,
+        full_purchase_price, full_price, full_bottles_count,
+        half_purchase_price, half_price, half_bottles_count,
+        quarter_purchase_price, quarter_price, quarter_bottles_count,
+        liter_purchase_price, liter_selling_price, liter_bottles_count,
         current_stock_bottles, current_stock_ml, minimum_stock_bottles, barcode, status, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,
       data.product_name,
@@ -169,10 +261,20 @@ app.post(
       data.selling_price_per_bottle,
       data.carton_purchase_price,
       data.carton_selling_price,
+      data.carton_stock_count,
+      data.full_purchase_price,
       data.full_price,
+      data.full_bottles_count,
+      data.half_purchase_price,
       data.half_price,
+      data.half_bottles_count,
+      data.quarter_purchase_price,
       data.quarter_price,
-      data.current_stock_bottles,
+      data.quarter_bottles_count,
+      data.liter_purchase_price,
+      data.liter_selling_price,
+      data.liter_bottles_count,
+      currentStockBottles,
       currentStockMl,
       data.minimum_stock_bottles,
       data.barcode ?? null,
@@ -186,23 +288,154 @@ app.post(
   },
 );
 
+app.patch(
+  '/v1/products/:id',
+  requireAuth,
+  requireRole('ADMIN'),
+  upload.fields([{ name: 'bottle_image' }, { name: 'carton_image' }]),
+  (req, res) => {
+    const parsed = productSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+    const existing = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id) as Product | undefined;
+    if (!existing) return res.status(404).json({ error: 'product not found' });
+    const files = req.files as Record<string, Express.Multer.File[] | undefined>;
+    const data = parsed.data;
+    const bottleImage = files.bottle_image?.[0]?.filename ? `/uploads/${files.bottle_image[0].filename}` : existing.bottle_image_url;
+    const cartonImage = files.carton_image?.[0]?.filename ? `/uploads/${files.carton_image[0].filename}` : existing.carton_image_url;
+    const currentStockMl = productStockMl(data);
+    const currentStockBottles = currentStockMl / data.size_ml;
+    db.prepare(`
+      UPDATE products
+      SET product_name = ?, brand = ?, category = ?, size_ml = ?, bottle_image_url = ?, carton_image_url = ?,
+        bottles_per_carton = ?, purchase_price_per_bottle = ?, selling_price_per_bottle = ?,
+        carton_purchase_price = ?, carton_selling_price = ?, carton_stock_count = ?,
+        full_purchase_price = ?, full_price = ?, full_bottles_count = ?,
+        half_purchase_price = ?, half_price = ?, half_bottles_count = ?,
+        quarter_purchase_price = ?, quarter_price = ?, quarter_bottles_count = ?,
+        liter_purchase_price = ?, liter_selling_price = ?, liter_bottles_count = ?,
+        current_stock_bottles = ?, current_stock_ml = ?, minimum_stock_bottles = ?, barcode = ?, status = ?, updated_at = ?
+      WHERE id = ?
+    `).run(
+      data.product_name,
+      data.brand,
+      data.category,
+      data.size_ml,
+      bottleImage,
+      cartonImage,
+      data.bottles_per_carton,
+      data.purchase_price_per_bottle,
+      data.selling_price_per_bottle,
+      data.carton_purchase_price,
+      data.carton_selling_price,
+      data.carton_stock_count,
+      data.full_purchase_price,
+      data.full_price,
+      data.full_bottles_count,
+      data.half_purchase_price,
+      data.half_price,
+      data.half_bottles_count,
+      data.quarter_purchase_price,
+      data.quarter_price,
+      data.quarter_bottles_count,
+      data.liter_purchase_price,
+      data.liter_selling_price,
+      data.liter_bottles_count,
+      currentStockBottles,
+      currentStockMl,
+      data.minimum_stock_bottles,
+      data.barcode ?? null,
+      data.status,
+      nowIso(),
+      req.params.id,
+    );
+    const product = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
+    emitBusinessUpdate('product.updated', product);
+    res.json(product);
+  },
+);
+
+const stockSchema = z.object({
+  cartons: z.coerce.number().nonnegative().default(0),
+  full_bottles: z.coerce.number().nonnegative().default(0),
+  half_bottles: z.coerce.number().nonnegative().default(0),
+  quarter_bottles: z.coerce.number().nonnegative().default(0),
+  liter_bottles: z.coerce.number().nonnegative().default(0),
+  bottles: z.coerce.number().nonnegative().default(0),
+  note: z.string().optional(),
+});
+
 app.post('/v1/products/:id/stock-in', requireAuth, requireRole('ADMIN'), (req, res) => {
-  const parsed = z.object({ cartons: z.coerce.number().default(0), bottles: z.coerce.number().default(0), note: z.string().optional() }).safeParse(req.body);
+  const parsed = stockSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'invalid stock payload' });
   const product = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id) as Product | undefined;
   if (!product) return res.status(404).json({ error: 'product not found' });
-  const quantityBottles = parsed.data.bottles + parsed.data.cartons * product.bottles_per_carton;
-  const quantityMl = quantityBottles * product.size_ml;
-  db.prepare('UPDATE products SET current_stock_bottles = current_stock_bottles + ?, current_stock_ml = current_stock_ml + ?, updated_at = ? WHERE id = ?').run(quantityBottles, quantityMl, nowIso(), product.id);
+  const quantityMl = stockMl(product, parsed.data);
+  const quantityBottles = quantityMl / product.size_ml;
+  if (quantityMl <= 0) return res.status(400).json({ error: 'stock quantity must be greater than zero' });
+  db.prepare(`UPDATE products SET
+      carton_stock_count = carton_stock_count + ?,
+      full_bottles_count = full_bottles_count + ?,
+      half_bottles_count = half_bottles_count + ?,
+      quarter_bottles_count = quarter_bottles_count + ?,
+      liter_bottles_count = liter_bottles_count + ?,
+      current_stock_bottles = current_stock_bottles + ?,
+      current_stock_ml = current_stock_ml + ?,
+      updated_at = ?
+    WHERE id = ?`).run(parsed.data.cartons, parsed.data.full_bottles + parsed.data.bottles, parsed.data.half_bottles, parsed.data.quarter_bottles, parsed.data.liter_bottles, quantityBottles, quantityMl, nowIso(), product.id);
   db.prepare('INSERT INTO stock_movements (id, product_id, type, quantity_bottles, quantity_ml, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)').run(uuid(), product.id, 'IN', quantityBottles, quantityMl, parsed.data.note ?? null, nowIso());
   const updated = db.prepare('SELECT * FROM products WHERE id = ?').get(product.id);
   emitBusinessUpdate('inventory.updated', updated);
   res.json(updated);
 });
 
+app.post('/v1/products/:id/stock-out', requireAuth, requireRole('ADMIN'), (req, res) => {
+  const parsed = stockSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'invalid stock payload' });
+  const product = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id) as Product | undefined;
+  if (!product) return res.status(404).json({ error: 'product not found' });
+  const quantityMl = stockMl(product, parsed.data);
+  const quantityBottles = quantityMl / product.size_ml;
+  if (quantityMl <= 0) return res.status(400).json({ error: 'stock quantity must be greater than zero' });
+  if (quantityMl > product.current_stock_ml) return res.status(400).json({ error: 'stock out exceeds available stock' });
+  db.prepare(`UPDATE products SET
+      carton_stock_count = MAX(0, carton_stock_count - ?),
+      full_bottles_count = MAX(0, full_bottles_count - ?),
+      half_bottles_count = MAX(0, half_bottles_count - ?),
+      quarter_bottles_count = MAX(0, quarter_bottles_count - ?),
+      liter_bottles_count = MAX(0, liter_bottles_count - ?),
+      current_stock_bottles = current_stock_bottles - ?,
+      current_stock_ml = current_stock_ml - ?,
+      updated_at = ?
+    WHERE id = ?`).run(parsed.data.cartons, parsed.data.full_bottles + parsed.data.bottles, parsed.data.half_bottles, parsed.data.quarter_bottles, parsed.data.liter_bottles, quantityBottles, quantityMl, nowIso(), product.id);
+  db.prepare('INSERT INTO stock_movements (id, product_id, type, quantity_bottles, quantity_ml, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)').run(uuid(), product.id, 'OUT', quantityBottles, quantityMl, parsed.data.note ?? null, nowIso());
+  const updated = db.prepare('SELECT * FROM products WHERE id = ?').get(product.id);
+  emitBusinessUpdate('inventory.updated', updated);
+  res.json(updated);
+});
+
+function stockMl(product: Product, stock: z.infer<typeof stockSchema>): number {
+  return (
+    stock.cartons * product.bottles_per_carton * product.size_ml +
+    (stock.full_bottles + stock.bottles) * product.size_ml +
+    stock.half_bottles * (product.size_ml / 2) +
+    stock.quarter_bottles * (product.size_ml / 4) +
+    stock.liter_bottles * 1000
+  );
+}
+
+function productStockMl(product: z.infer<typeof productSchema>): number {
+  return (
+    product.carton_stock_count * product.bottles_per_carton * product.size_ml +
+    product.full_bottles_count * product.size_ml +
+    product.half_bottles_count * (product.size_ml / 2) +
+    product.quarter_bottles_count * (product.size_ml / 4) +
+    product.liter_bottles_count * 1000
+  );
+}
+
 const orderItemSchema = z.object({
   product_id: z.string(),
-  unit_type: z.enum(['BOTTLE', 'CARTON', 'FULL', 'HALF', 'QUARTER']),
+  unit_type: z.enum(['BOTTLE', 'CARTON', 'FULL', 'HALF', 'QUARTER', 'LITER']),
   quantity: z.coerce.number().positive(),
 });
 
@@ -329,9 +562,28 @@ function createOrder(outletId: string, userId: string, items: OrderItemInput[]) 
 }
 
 function deductStockForOrder(orderId: string): void {
-  const items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(orderId) as { product_id: string; stock_deducted_bottles: number; stock_deducted_ml: number }[];
+  const items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(orderId) as { product_id: string; unit_type: UnitType; quantity: number; stock_deducted_bottles: number; stock_deducted_ml: number }[];
   for (const item of items) {
-    db.prepare('UPDATE products SET current_stock_bottles = current_stock_bottles - ?, current_stock_ml = current_stock_ml - ?, updated_at = ? WHERE id = ?').run(item.stock_deducted_bottles, item.stock_deducted_ml, nowIso(), item.product_id);
+    db.prepare(`UPDATE products SET
+        carton_stock_count = MAX(0, carton_stock_count - ?),
+        full_bottles_count = MAX(0, full_bottles_count - ?),
+        half_bottles_count = MAX(0, half_bottles_count - ?),
+        quarter_bottles_count = MAX(0, quarter_bottles_count - ?),
+        liter_bottles_count = MAX(0, liter_bottles_count - ?),
+        current_stock_bottles = current_stock_bottles - ?,
+        current_stock_ml = current_stock_ml - ?,
+        updated_at = ?
+      WHERE id = ?`).run(
+      item.unit_type === 'CARTON' ? item.quantity : 0,
+      item.unit_type === 'BOTTLE' || item.unit_type === 'FULL' ? item.quantity : 0,
+      item.unit_type === 'HALF' ? item.quantity : 0,
+      item.unit_type === 'QUARTER' ? item.quantity : 0,
+      item.unit_type === 'LITER' ? item.quantity : 0,
+      item.stock_deducted_bottles,
+      item.stock_deducted_ml,
+      nowIso(),
+      item.product_id,
+    );
     db.prepare('INSERT INTO stock_movements (id, product_id, type, quantity_bottles, quantity_ml, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)').run(uuid(), item.product_id, 'OUT', item.stock_deducted_bottles, item.stock_deducted_ml, `Order ${orderId}`, nowIso());
   }
 }

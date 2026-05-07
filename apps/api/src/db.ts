@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { v4 as uuid } from 'uuid';
+import { catalogProducts } from './catalog/products.js';
 
 const databaseFile = resolve(process.env.DATABASE_FILE ?? './data/andhrawala.db');
 mkdirSync(dirname(databaseFile), { recursive: true });
@@ -21,6 +22,8 @@ export function toRupees(value: number): number {
 
 export function initDb(): void {
   db.exec(`
+    PRAGMA ignore_check_constraints = ON;
+
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -54,9 +57,19 @@ export function initDb(): void {
       selling_price_per_bottle REAL NOT NULL,
       carton_purchase_price REAL NOT NULL,
       carton_selling_price REAL NOT NULL,
+      carton_stock_count REAL NOT NULL DEFAULT 0,
+      full_purchase_price REAL NOT NULL DEFAULT 0,
       full_price REAL NOT NULL,
+      full_bottles_count REAL NOT NULL DEFAULT 0,
+      half_purchase_price REAL NOT NULL DEFAULT 0,
       half_price REAL NOT NULL,
+      half_bottles_count REAL NOT NULL DEFAULT 0,
+      quarter_purchase_price REAL NOT NULL DEFAULT 0,
       quarter_price REAL NOT NULL,
+      quarter_bottles_count REAL NOT NULL DEFAULT 0,
+      liter_purchase_price REAL NOT NULL DEFAULT 0,
+      liter_selling_price REAL NOT NULL DEFAULT 0,
+      liter_bottles_count REAL NOT NULL DEFAULT 0,
       current_stock_bottles REAL NOT NULL DEFAULT 0,
       current_stock_ml REAL NOT NULL DEFAULT 0,
       minimum_stock_bottles REAL NOT NULL DEFAULT 0,
@@ -95,7 +108,7 @@ export function initDb(): void {
       id TEXT PRIMARY KEY,
       order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
       product_id TEXT NOT NULL REFERENCES products(id),
-      unit_type TEXT NOT NULL CHECK (unit_type IN ('BOTTLE', 'CARTON', 'FULL', 'HALF', 'QUARTER')),
+      unit_type TEXT NOT NULL CHECK (unit_type IN ('BOTTLE', 'CARTON', 'FULL', 'HALF', 'QUARTER', 'LITER')),
       quantity REAL NOT NULL,
       unit_selling_price REAL NOT NULL,
       unit_purchase_cost REAL NOT NULL,
@@ -149,8 +162,30 @@ export function initDb(): void {
     CREATE INDEX IF NOT EXISTS idx_invoices_outlet_status ON invoices(outlet_id, status);
     CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, is_read);
   `);
+  ensureProductColumns();
 
   seed();
+}
+
+function ensureProductColumns(): void {
+  const columns = new Set(
+    db.prepare('PRAGMA table_info(products)').all().map((row) => (row as { name: string }).name),
+  );
+  const additions = [
+    ['carton_stock_count', 'REAL NOT NULL DEFAULT 0'],
+    ['full_purchase_price', 'REAL NOT NULL DEFAULT 0'],
+    ['full_bottles_count', 'REAL NOT NULL DEFAULT 0'],
+    ['half_purchase_price', 'REAL NOT NULL DEFAULT 0'],
+    ['half_bottles_count', 'REAL NOT NULL DEFAULT 0'],
+    ['quarter_purchase_price', 'REAL NOT NULL DEFAULT 0'],
+    ['quarter_bottles_count', 'REAL NOT NULL DEFAULT 0'],
+    ['liter_purchase_price', 'REAL NOT NULL DEFAULT 0'],
+    ['liter_selling_price', 'REAL NOT NULL DEFAULT 0'],
+    ['liter_bottles_count', 'REAL NOT NULL DEFAULT 0'],
+  ];
+  for (const [name, definition] of additions) {
+    if (!columns.has(name)) db.exec(`ALTER TABLE products ADD COLUMN ${name} ${definition}`);
+  }
 }
 
 function seed(): void {
@@ -176,42 +211,25 @@ function seed(): void {
     ).run(uuid(), 'Blue Moon Bar', '9000000001', hash, 'OUTLET', outlets.id, nowIso());
   }
 
-  const productCount = db.prepare('SELECT COUNT(*) AS total FROM products').get() as {
-    total: number;
-  };
-  if (productCount.total === 0) {
-    const products = [
-      ['Royal Stag', 'Royal Stag', 'Whisky', 750, 12, 420, 600, 5040, 6900, 600, 320, 180, 144, 12],
-      ['Kingfisher Premium', 'Kingfisher', 'Beer', 650, 12, 95, 150, 1140, 1800, 150, 80, 45, 240, 24],
-      ['Old Monk', 'Old Monk', 'Rum', 750, 12, 300, 480, 3600, 5520, 480, 260, 150, 96, 10],
-    ] as const;
-    const stmt = db.prepare(`
+  const stmt = db.prepare(`
       INSERT INTO products (
-        id, product_name, brand, category, size_ml, bottles_per_carton,
+        id, product_name, brand, category, size_ml, bottle_image_url, bottles_per_carton,
         purchase_price_per_bottle, selling_price_per_bottle, carton_purchase_price,
         carton_selling_price, full_price, half_price, quarter_price,
         current_stock_bottles, current_stock_ml, minimum_stock_bottles, status, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'ACTIVE', ?, ?)
     `);
-    for (const p of products) {
+  for (const product of catalogProducts) {
+    const existing = db.prepare('SELECT id FROM products WHERE product_name = ?').get(product.product_name);
+    if (!existing) {
       const createdAt = nowIso();
       stmt.run(
         uuid(),
-        p[0],
-        p[1],
-        p[2],
-        p[3],
-        p[4],
-        p[5],
-        p[6],
-        p[7],
-        p[8],
-        p[9],
-        p[10],
-        p[11],
-        p[12],
-        p[12] * p[3],
-        p[13],
+        product.product_name,
+        product.brand,
+        product.category,
+        product.size_ml,
+        product.bottle_image_url,
         createdAt,
         createdAt,
       );

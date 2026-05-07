@@ -1,7 +1,7 @@
 import type { Request } from 'express';
 
 export type Role = 'ADMIN' | 'OUTLET';
-export type UnitType = 'BOTTLE' | 'CARTON' | 'FULL' | 'HALF' | 'QUARTER';
+export type UnitType = 'BOTTLE' | 'CARTON' | 'FULL' | 'HALF' | 'QUARTER' | 'LITER';
 export type OrderStatus = 'PLACED' | 'APPROVED' | 'DELIVERED' | 'CANCELLED' | 'REJECTED';
 export type PaymentMode = 'CASH' | 'BANK' | 'CARD';
 export type NotificationType = 'ORDER' | 'BILL' | 'PAYMENT' | 'STOCK' | 'ALERT';
@@ -31,9 +31,19 @@ export interface Product {
   selling_price_per_bottle: number;
   carton_purchase_price: number;
   carton_selling_price: number;
+  carton_stock_count: number;
+  full_purchase_price: number;
   full_price: number;
+  full_bottles_count: number;
+  half_purchase_price: number;
   half_price: number;
+  half_bottles_count: number;
+  quarter_purchase_price: number;
   quarter_price: number;
+  quarter_bottles_count: number;
+  liter_purchase_price: number;
+  liter_selling_price: number;
+  liter_bottles_count: number;
   current_stock_bottles: number;
   current_stock_ml: number;
   minimum_stock_bottles: number;
