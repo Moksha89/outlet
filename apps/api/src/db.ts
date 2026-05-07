@@ -219,7 +219,7 @@ function seed(): void {
         half_purchase_price, half_price, half_bottles_count, quarter_purchase_price, quarter_price,
         quarter_bottles_count, liter_purchase_price, liter_selling_price, liter_bottles_count,
         current_stock_bottles, current_stock_ml, minimum_stock_bottles, status, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'ACTIVE', ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'ACTIVE', ?, ?)
     `);
   for (const product of catalogProducts) {
     const existing = db.prepare('SELECT id FROM products WHERE product_name = ?').get(product.product_name);
