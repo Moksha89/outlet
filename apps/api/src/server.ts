@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import bcrypt from 'bcryptjs';
 import cors from 'cors';
 import express from 'express';
 import { createServer } from 'node:http';
@@ -127,6 +128,50 @@ app.get('/v1/outlets', requireAuth, requireRole('ADMIN'), (_req, res) => {
   res.json(db.prepare('SELECT * FROM outlets ORDER BY name').all());
 });
 
+const outletSchema = z.object({
+  name: z.string().min(1),
+  phone: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  credit_limit: z.coerce.number().nonnegative().default(0),
+  password: z.string().min(6).optional(),
+});
+
+app.post('/v1/outlets', requireAuth, requireRole('ADMIN'), (req, res) => {
+  const parsed = outletSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  const id = uuid();
+  const data = parsed.data;
+  db.prepare('INSERT INTO outlets (id, name, phone, address, credit_limit, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(id, data.name, data.phone ?? null, data.address ?? null, data.credit_limit, nowIso());
+  if (data.phone) {
+    const existing = db.prepare('SELECT id FROM users WHERE phone = ?').get(data.phone);
+    if (!existing) {
+      db.prepare(
+        'INSERT INTO users (id, name, phone, password_hash, role, outlet_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      ).run(uuid(), data.name, data.phone, bcrypt.hashSync(data.password ?? '123456', 10), 'OUTLET', id, nowIso());
+    }
+  }
+  const outlet = db.prepare('SELECT * FROM outlets WHERE id = ?').get(id);
+  void notify({ title: 'New Outlet Created', message: `${data.name} outlet account was created.`, type: 'ALERT' });
+  emitBusinessUpdate('outlet.created', outlet);
+  res.status(201).json(outlet);
+});
+
+app.patch('/v1/outlets/:id', requireAuth, requireRole('ADMIN'), (req, res) => {
+  const parsed = outletSchema.omit({ password: true }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  const existing = db.prepare('SELECT * FROM outlets WHERE id = ?').get(req.params.id);
+  if (!existing) return res.status(404).json({ error: 'outlet not found' });
+  const data = parsed.data;
+  db.prepare('UPDATE outlets SET name = ?, phone = ?, address = ?, credit_limit = ? WHERE id = ?')
+    .run(data.name, data.phone ?? null, data.address ?? null, data.credit_limit, req.params.id);
+  db.prepare('UPDATE users SET name = ?, phone = ? WHERE outlet_id = ? AND role = ?')
+    .run(data.name, data.phone ?? null, req.params.id, 'OUTLET');
+  const outlet = db.prepare('SELECT * FROM outlets WHERE id = ?').get(req.params.id);
+  emitBusinessUpdate('outlet.updated', outlet);
+  res.json(outlet);
+});
+
 const productSchema = z.object({
   product_name: z.string().min(1),
   brand: z.string().min(1),
@@ -201,6 +246,57 @@ app.post(
   },
 );
 
+app.patch(
+  '/v1/products/:id',
+  requireAuth,
+  requireRole('ADMIN'),
+  upload.fields([{ name: 'bottle_image' }, { name: 'carton_image' }]),
+  (req, res) => {
+    const parsed = productSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+    const existing = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id) as Product | undefined;
+    if (!existing) return res.status(404).json({ error: 'product not found' });
+    const files = req.files as Record<string, Express.Multer.File[] | undefined>;
+    const data = parsed.data;
+    const bottleImage = files.bottle_image?.[0]?.filename ? `/uploads/${files.bottle_image[0].filename}` : existing.bottle_image_url;
+    const cartonImage = files.carton_image?.[0]?.filename ? `/uploads/${files.carton_image[0].filename}` : existing.carton_image_url;
+    const currentStockMl = data.current_stock_bottles * data.size_ml;
+    db.prepare(`
+      UPDATE products
+      SET product_name = ?, brand = ?, category = ?, size_ml = ?, bottle_image_url = ?, carton_image_url = ?,
+        bottles_per_carton = ?, purchase_price_per_bottle = ?, selling_price_per_bottle = ?,
+        carton_purchase_price = ?, carton_selling_price = ?, full_price = ?, half_price = ?, quarter_price = ?,
+        current_stock_bottles = ?, current_stock_ml = ?, minimum_stock_bottles = ?, barcode = ?, status = ?, updated_at = ?
+      WHERE id = ?
+    `).run(
+      data.product_name,
+      data.brand,
+      data.category,
+      data.size_ml,
+      bottleImage,
+      cartonImage,
+      data.bottles_per_carton,
+      data.purchase_price_per_bottle,
+      data.selling_price_per_bottle,
+      data.carton_purchase_price,
+      data.carton_selling_price,
+      data.full_price,
+      data.half_price,
+      data.quarter_price,
+      data.current_stock_bottles,
+      currentStockMl,
+      data.minimum_stock_bottles,
+      data.barcode ?? null,
+      data.status,
+      nowIso(),
+      req.params.id,
+    );
+    const product = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
+    emitBusinessUpdate('product.updated', product);
+    res.json(product);
+  },
+);
+
 app.post('/v1/products/:id/stock-in', requireAuth, requireRole('ADMIN'), (req, res) => {
   const parsed = z.object({ cartons: z.coerce.number().default(0), bottles: z.coerce.number().default(0), note: z.string().optional() }).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'invalid stock payload' });
@@ -210,6 +306,22 @@ app.post('/v1/products/:id/stock-in', requireAuth, requireRole('ADMIN'), (req, r
   const quantityMl = quantityBottles * product.size_ml;
   db.prepare('UPDATE products SET current_stock_bottles = current_stock_bottles + ?, current_stock_ml = current_stock_ml + ?, updated_at = ? WHERE id = ?').run(quantityBottles, quantityMl, nowIso(), product.id);
   db.prepare('INSERT INTO stock_movements (id, product_id, type, quantity_bottles, quantity_ml, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)').run(uuid(), product.id, 'IN', quantityBottles, quantityMl, parsed.data.note ?? null, nowIso());
+  const updated = db.prepare('SELECT * FROM products WHERE id = ?').get(product.id);
+  emitBusinessUpdate('inventory.updated', updated);
+  res.json(updated);
+});
+
+app.post('/v1/products/:id/stock-out', requireAuth, requireRole('ADMIN'), (req, res) => {
+  const parsed = z.object({ cartons: z.coerce.number().default(0), bottles: z.coerce.number().default(0), note: z.string().optional() }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'invalid stock payload' });
+  const product = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id) as Product | undefined;
+  if (!product) return res.status(404).json({ error: 'product not found' });
+  const quantityBottles = parsed.data.bottles + parsed.data.cartons * product.bottles_per_carton;
+  if (quantityBottles <= 0) return res.status(400).json({ error: 'stock quantity must be greater than zero' });
+  if (quantityBottles > product.current_stock_bottles) return res.status(400).json({ error: 'stock out exceeds available stock' });
+  const quantityMl = quantityBottles * product.size_ml;
+  db.prepare('UPDATE products SET current_stock_bottles = current_stock_bottles - ?, current_stock_ml = current_stock_ml - ?, updated_at = ? WHERE id = ?').run(quantityBottles, quantityMl, nowIso(), product.id);
+  db.prepare('INSERT INTO stock_movements (id, product_id, type, quantity_bottles, quantity_ml, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)').run(uuid(), product.id, 'OUT', quantityBottles, quantityMl, parsed.data.note ?? null, nowIso());
   const updated = db.prepare('SELECT * FROM products WHERE id = ?').get(product.id);
   emitBusinessUpdate('inventory.updated', updated);
   res.json(updated);

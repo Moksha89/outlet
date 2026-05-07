@@ -3,12 +3,14 @@ import {
   Bell,
   Boxes,
   CreditCard,
+  Edit3,
   IndianRupee,
   LayoutDashboard,
   LogOut,
   Menu,
   PackagePlus,
   ReceiptText,
+  Store,
   ShoppingCart,
   TrendingUp,
   X,
@@ -29,11 +31,12 @@ import type {
   User,
 } from './types';
 
-type Tab = 'dashboard' | 'products' | 'orders' | 'invoices' | 'payments' | 'reports' | 'notifications';
+type Tab = 'dashboard' | 'products' | 'outlets' | 'orders' | 'invoices' | 'payments' | 'reports' | 'notifications';
 
 const tabs: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'products', label: 'Products', icon: Boxes },
+  { id: 'outlets', label: 'Outlets', icon: Store },
   { id: 'orders', label: 'Orders', icon: ShoppingCart },
   { id: 'invoices', label: 'Bills', icon: ReceiptText },
   { id: 'payments', label: 'Payments', icon: CreditCard },
@@ -113,7 +116,7 @@ export function App() {
     () => products.filter((p) => p.current_stock_bottles <= p.minimum_stock_bottles),
     [products],
   );
-  const visibleTabs = tabs.filter((item) => user?.role === 'ADMIN' || item.id !== 'reports');
+  const visibleTabs = tabs.filter((item) => user?.role === 'ADMIN' || !['reports', 'outlets'].includes(item.id));
   const ActiveIcon = visibleTabs.find((item) => item.id === tab)?.icon ?? LayoutDashboard;
 
   if (!user || !tokenValue) {
@@ -217,6 +220,9 @@ export function App() {
           <DashboardView dashboard={dashboard} lowStock={lowStock} user={user} />
         ) : null}
         {tab === 'products' ? <ProductsView user={user} products={products} onSaved={load} /> : null}
+        {tab === 'outlets' && user.role === 'ADMIN' ? (
+          <OutletsView outlets={outlets} orders={orders} invoices={invoices} payments={payments} onSaved={load} />
+        ) : null}
         {tab === 'orders' ? (
           <OrdersView user={user} products={products} outlets={outlets} orders={orders} onSaved={load} />
         ) : null}
@@ -327,10 +333,16 @@ function ProductsView({
   onSaved: () => Promise<void>;
 }) {
   const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<Product | null>(null);
+  const [stockProduct, setStockProduct] = useState<Product | null>(null);
+  const [stockType, setStockType] = useState<'in' | 'out'>('in');
   return (
     <section className="panel">
       <div className="sectionHeader">
-        <h2>Product Catalogue</h2>
+        <div>
+          <h2>Product Catalogue</h2>
+          {user.role === 'ADMIN' ? <p className="muted">Edit product details, pricing, images, stock IN, and stock OUT.</p> : null}
+        </div>
         {user.role === 'ADMIN' ? (
           <button className="goldButton small" onClick={() => setShowForm(!showForm)}>
             <PackagePlus size={16} /> Add Product
@@ -338,6 +350,8 @@ function ProductsView({
         ) : null}
       </div>
       {showForm ? <ProductForm onSaved={async () => { setShowForm(false); await onSaved(); }} /> : null}
+      {editing ? <ProductForm product={editing} onSaved={async () => { setEditing(null); await onSaved(); }} /> : null}
+      {stockProduct ? <StockForm product={stockProduct} type={stockType} onSaved={async () => { setStockProduct(null); await onSaved(); }} /> : null}
       <div className="productGrid">
         {products.map((product) => (
           <article className="productCard" key={product.id}>
@@ -357,6 +371,13 @@ function ProductsView({
               <p className={product.current_stock_bottles <= product.minimum_stock_bottles ? 'danger' : 'muted'}>
                 Stock: {product.current_stock_bottles} bottles / {(product.current_stock_bottles / product.bottles_per_carton).toFixed(1)} cartons
               </p>
+              {user.role === 'ADMIN' ? (
+                <div className="actions">
+                  <button onClick={() => setEditing(product)}><Edit3 size={13} /> Edit</button>
+                  <button onClick={() => { setStockType('in'); setStockProduct(product); }}>Stock IN</button>
+                  <button onClick={() => { setStockType('out'); setStockProduct(product); }}>Stock OUT</button>
+                </div>
+              ) : null}
             </div>
           </article>
         ))}
@@ -365,7 +386,7 @@ function ProductsView({
   );
 }
 
-function ProductForm({ onSaved }: { onSaved: () => Promise<void> }) {
+function ProductForm({ product, onSaved }: { product?: Product; onSaved: () => Promise<void> }) {
   const fields = [
     'product_name', 'brand', 'category', 'size_ml', 'bottles_per_carton',
     'purchase_price_per_bottle', 'selling_price_per_bottle', 'carton_purchase_price',
@@ -376,13 +397,117 @@ function ProductForm({ onSaved }: { onSaved: () => Promise<void> }) {
     <form className="formGrid" onSubmit={async (e) => {
       e.preventDefault();
       const form = new FormData(e.currentTarget);
-      await api.post('/v1/products', form);
+      if (product) await api.patch(`/v1/products/${product.id}`, form);
+      else await api.post('/v1/products', form);
       await onSaved();
     }}>
-      {fields.map((field) => <label key={field}>{human(field)}<input name={field} required={!['barcode'].includes(field)} /></label>)}
+      {fields.map((field) => (
+        <label key={field}>
+          {human(field)}
+          <input
+            name={field}
+            required={!['barcode'].includes(field)}
+            defaultValue={product ? String(product[field as keyof Product] ?? '') : numericProductFields.has(field) ? '0' : ''}
+          />
+        </label>
+      ))}
+      <label>Status
+        <select name="status" defaultValue={product?.status ?? 'ACTIVE'}>
+          <option>ACTIVE</option>
+          <option>INACTIVE</option>
+        </select>
+      </label>
       <label>Bottle Image<input name="bottle_image" type="file" accept="image/*" /></label>
       <label>Carton Image<input name="carton_image" type="file" accept="image/*" /></label>
-      <button className="goldButton">Save product</button>
+      <button className="goldButton">{product ? 'Update product' : 'Save product'}</button>
+    </form>
+  );
+}
+
+const numericProductFields = new Set([
+  'size_ml', 'bottles_per_carton', 'purchase_price_per_bottle', 'selling_price_per_bottle',
+  'carton_purchase_price', 'carton_selling_price', 'full_price', 'half_price', 'quarter_price',
+  'current_stock_bottles', 'minimum_stock_bottles',
+]);
+
+function StockForm({ product, type, onSaved }: { product: Product; type: 'in' | 'out'; onSaved: () => Promise<void> }) {
+  return (
+    <form className="inlineForm stockForm" onSubmit={async (e) => {
+      e.preventDefault();
+      const form = Object.fromEntries(new FormData(e.currentTarget));
+      await api.post(`/v1/products/${product.id}/stock-${type}`, form);
+      await onSaved();
+    }}>
+      <strong>{type === 'in' ? 'Stock IN' : 'Stock OUT'}: {product.product_name}</strong>
+      <input name="cartons" type="number" min="0" step="0.01" placeholder="Cartons" defaultValue="0" />
+      <input name="bottles" type="number" min="0" step="0.01" placeholder="Bottles" defaultValue="0" />
+      <input name="note" placeholder="Note / reason" />
+      <button className="goldButton small">{type === 'in' ? 'Add stock' : 'Remove stock'}</button>
+    </form>
+  );
+}
+
+function OutletsView({
+  outlets,
+  orders,
+  invoices,
+  payments,
+  onSaved,
+}: {
+  outlets: Outlet[];
+  orders: Order[];
+  invoices: Invoice[];
+  payments: Payment[];
+  onSaved: () => Promise<void>;
+}) {
+  const [editing, setEditing] = useState<Outlet | null>(null);
+  return (
+    <section className="panel">
+      <div className="sectionHeader">
+        <div>
+          <h2>Outlet Management</h2>
+          <p className="muted">Create outlets, view order totals, invoices, pending balances, and payments.</p>
+        </div>
+      </div>
+      <OutletForm outlet={editing ?? undefined} onSaved={async () => { setEditing(null); await onSaved(); }} />
+      <div className="table">
+        {outlets.map((outlet) => {
+          const outletOrders = orders.filter((order) => order.outlet_id === outlet.id);
+          const outletInvoices = invoices.filter((invoice) => invoice.outlet_id === outlet.id);
+          const outletPayments = payments.filter((payment) => payment.outlet_id === outlet.id);
+          const pending = outletInvoices.reduce((sum, invoice) => sum + Number(invoice.remaining_balance), 0);
+          const paid = outletPayments.reduce((sum, payment) => sum + Number(payment.amount), 0);
+          return (
+            <div className="tr outletRow" key={outlet.id}>
+              <span><strong>{outlet.name}</strong><small>{outlet.phone ?? 'No phone'} · {outlet.address ?? 'No address'}</small></span>
+              <span>Orders <strong>{outletOrders.length}</strong></span>
+              <span>Invoices <strong>{outletInvoices.length}</strong><small>Pending {money(pending)}</small></span>
+              <span>Payments <strong>{money(paid)}</strong><small>Limit {money(outlet.credit_limit)}</small></span>
+              <span className="actions"><button onClick={() => setEditing(outlet)}>Edit outlet</button></span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function OutletForm({ outlet, onSaved }: { outlet?: Outlet; onSaved: () => Promise<void> }) {
+  return (
+    <form className="inlineForm" onSubmit={async (e) => {
+      e.preventDefault();
+      const body = Object.fromEntries(new FormData(e.currentTarget));
+      if (outlet) await api.patch(`/v1/outlets/${outlet.id}`, body);
+      else await api.post('/v1/outlets', body);
+      e.currentTarget.reset();
+      await onSaved();
+    }}>
+      <input name="name" placeholder="Outlet name" defaultValue={outlet?.name ?? ''} required />
+      <input name="phone" placeholder="Login phone" defaultValue={outlet?.phone ?? ''} />
+      <input name="address" placeholder="Address" defaultValue={outlet?.address ?? ''} />
+      <input name="credit_limit" type="number" min="0" placeholder="Credit limit" defaultValue={outlet?.credit_limit ?? 0} />
+      {!outlet ? <input name="password" placeholder="Password (default 123456)" /> : null}
+      <button className="goldButton small">{outlet ? 'Update outlet' : 'Create outlet'}</button>
     </form>
   );
 }
@@ -412,6 +537,7 @@ function OrdersView({
             <span>{money(order.sales_total)}</span>
             {user.role === 'ADMIN' ? (
               <span className="actions">
+                <button onClick={() => alertOrderItems(order.id)}>View</button>
                 <button onClick={() => updateStatus(order.id, 'APPROVED', onSaved)}>Approve</button>
                 <button onClick={() => updateStatus(order.id, 'DELIVERED', onSaved)}>Delivered</button>
                 <button onClick={() => updateStatus(order.id, 'CANCELLED', onSaved)}>Cancel</button>
@@ -449,8 +575,24 @@ async function updateStatus(id: string, status: string, onSaved: () => Promise<v
   await onSaved();
 }
 
+async function alertOrderItems(id: string) {
+  const { data } = await api.get<{ product_name: string; unit_type: string; quantity: number; line_sales_total: number }[]>(`/v1/orders/${id}/items`);
+  window.alert(data.map((item) => `${item.product_name} · ${item.unit_type} x ${item.quantity} = ${money(item.line_sales_total)}`).join('\n') || 'No items');
+}
+
 function InvoicesView({ invoices }: { invoices: Invoice[] }) {
-  return <section className="panel"><h2>Pending Bills & Invoice Details</h2><Rows rows={invoices.map((i) => [i.invoice_number, i.outlet_name, i.status, money(i.amount), money(i.remaining_balance)])} /></section>;
+  return (
+    <section className="panel">
+      <h2>Billing & Invoices</h2>
+      <Rows rows={invoices.map((i) => [
+        i.invoice_number,
+        `${i.outlet_name} · ${i.order_number}`,
+        i.status,
+        `Bill ${money(i.amount)}`,
+        `Paid ${money(i.paid_amount)} / Due ${money(i.remaining_balance)}`,
+      ])} />
+    </section>
+  );
 }
 
 function PaymentsView({ user, outlets, invoices, payments, onSaved }: { user: User; outlets: Outlet[]; invoices: Invoice[]; payments: Payment[]; onSaved: () => Promise<void> }) {
@@ -516,6 +658,7 @@ function tabTitle(tab: Tab): string {
     payments: 'Payment Update',
     reports: 'Profit Report',
     notifications: 'Notification Center',
+    outlets: 'Outlet Management',
   }[tab];
 }
 
