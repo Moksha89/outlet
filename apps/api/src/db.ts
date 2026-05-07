@@ -215,11 +215,9 @@ function seed(): void {
       INSERT INTO products (
         id, product_name, brand, category, size_ml, bottle_image_url, bottles_per_carton,
         purchase_price_per_bottle, selling_price_per_bottle, carton_purchase_price,
-        carton_selling_price, carton_stock_count, full_purchase_price, full_price, full_bottles_count,
-        half_purchase_price, half_price, half_bottles_count, quarter_purchase_price, quarter_price,
-        quarter_bottles_count, liter_purchase_price, liter_selling_price, liter_bottles_count,
+        carton_selling_price, full_price, half_price, quarter_price,
         current_stock_bottles, current_stock_ml, minimum_stock_bottles, status, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'ACTIVE', ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'ACTIVE', ?, ?)
     `);
   for (const product of catalogProducts) {
     const existing = db.prepare('SELECT id FROM products WHERE product_name = ?').get(product.product_name);
