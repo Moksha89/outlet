@@ -4,303 +4,341 @@
     "brand": "Budweiser",
     "category": "Beer",
     "size_ml": 330,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Budweiser_bottle.jpg/500px-Budweiser_bottle.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:Budweiser bottle.jpg"
+    "image_source_url": "https://s3.ap-south-1.amazonaws.com/catalog-india.citydrinks.com/products/14179605-b388-40b4-a872-42c7e1a1d99e.webp",
+    "image_source_title": "https://citydrinks.com/p/budweiser-long-neck-6-pack-888",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Corona Extra Beer",
     "brand": "Corona Extra",
     "category": "Beer",
     "size_ml": 330,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Corona_Extra_Chac_Mool.jpg/500px-Corona_Extra_Chac_Mool.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:Corona Extra Chac Mool.jpg"
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/d9aa699a-9e2a-4ecb-a4f1-c59e2200e617.webp",
+    "image_source_title": "https://citydrinks.com/p/corona-extra-6-pack-886",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Kingfisher Beer",
     "brand": "Kingfisher",
     "category": "Beer",
     "size_ml": 650,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Kingfisher_Storm_Beer_01.jpg/500px-Kingfisher_Storm_Beer_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:Kingfisher Storm Beer 01.jpg"
+    "image_source_url": "https://s3.ap-south-1.amazonaws.com/catalog-india.citydrinks.com/products/6e5a084c-b6a4-44f1-b526-df8aaf542d37.webp",
+    "image_source_title": "https://citydrinks.com/p/kingfisher-beer-btl-650ml-6-pack-5558",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Heineken Beer",
     "brand": "Heineken",
     "category": "Beer",
     "size_ml": 330,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/CreativeTools.se_-_PackshotCreator_-_Heineken_beer_bottle_v01_%284290167332%29.jpg/500px-CreativeTools.se_-_PackshotCreator_-_Heineken_beer_bottle_v01_%284290167332%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:CreativeTools.se - PackshotCreator - Heineken beer bottle v01 (4290167332).jpg"
+    "image_source_url": "https://s3.ap-south-1.amazonaws.com/catalog-india.citydrinks.com/products/6712d420-2eb2-4df8-9f85-81749aba1c71.webp",
+    "image_source_title": "https://citydrinks.com/p/heineken-long-neck-6-pack-889",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Ice Beer",
     "brand": "Ice",
     "category": "Beer",
     "size_ml": 650,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Beer_on_ice_in_hotel_room.jpg/500px-Beer_on_ice_in_hotel_room.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:Beer on ice in hotel room.jpg"
+    "image_source_url": "https://api.mircate.com/5p1hp1d2t/CALL/PIMAPI/getImage/jux9er4tf08?filename=jux9er4tf08-8dfb8be1cedd4398b778a65dd60e78e4.png&quality=100",
+    "image_source_title": "https://www.mmihomedelivery.ae/product/magic-ice-vodka-1l",
+    "image_source": "MMI Home Delivery"
   },
   {
     "product_name": "Bacardi Breezer",
     "brand": "Bacardi Breezer",
     "category": "Ready To Drink",
     "size_ml": 275,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Bacardi_Breezer_Bottles.jpg/500px-Bacardi_Breezer_Bottles.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:Bacardi Breezer Bottles.jpg"
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/dee7cfed-4e9d-4ab9-8eba-292f2eeb5056.webp",
+    "image_source_title": "https://citydrinks.com/p/bacardi-breezer---watermelon-6-pack-1324",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Jack Daniel’s Tennessee Whiskey",
     "brand": "Jack Daniel’s",
     "category": "Whiskey",
     "size_ml": 750,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Gentleman_Jack_Whiskey_%288743148250%29.jpg/500px-Gentleman_Jack_Whiskey_%288743148250%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:Gentleman Jack Whiskey (8743148250).jpg"
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/83d873c4-61e9-4e44-a55e-6018dff200a7.webp",
+    "image_source_title": "https://citydrinks.com/p/jack-daniel-s-old-no-7-1016",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Baileys Irish Cream",
     "brand": "Baileys",
     "category": "Liqueur",
     "size_ml": 750,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Baileys_Irish_Cream_Liqueur_01.jpg/500px-Baileys_Irish_Cream_Liqueur_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:Baileys Irish Cream Liqueur 01.jpg"
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/96c7e295-feba-4f95-b1f4-ca93ff7c31e8.webp",
+    "image_source_title": "https://citydrinks.com/p/baileys-the-original-irish-cream-936",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Jameson Irish Whiskey",
     "brand": "Jameson",
     "category": "Whiskey",
     "size_ml": 750,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Bottles_of_Jameson_Irish_Whiskey.JPG/500px-Bottles_of_Jameson_Irish_Whiskey.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:Bottles of Jameson Irish Whiskey.JPG"
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/bec7364b-d2c0-431e-9336-791fd426e69b.webp",
+    "image_source_title": "https://citydrinks.com/p/jameson-triple-distilled-1029",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Absolut Citron Vodka",
     "brand": "Absolut",
     "category": "Vodka",
     "size_ml": 750,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/f/f7/Absolut_Citron.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
-    "image_source_title": "File:Absolut Citron.jpg"
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/8e57498a-38ef-4c0c-96d3-c6a47ec46ec5.webp",
+    "image_source_title": "https://citydrinks.com/p/absolut---citron-715",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Bacardi White Rum",
     "brand": "Bacardi",
     "category": "Rum",
     "size_ml": 750,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Bacardi_%28on_white%29.jpg/500px-Bacardi_%28on_white%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:Bacardi (on white).jpg"
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/82cfcddc-db20-4339-83e7-1059c188ae0e.webp",
+    "image_source_title": "https://citydrinks.com/p/bacardi---carta-blanca-728",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Old Monk Rum",
     "brand": "Old Monk",
     "category": "Rum",
     "size_ml": 750,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Old_Monk.jpg/500px-Old_Monk.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:Old Monk.jpg"
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/784f2df9-c744-43f6-ba75-d9276ba2c644.webp",
+    "image_source_title": "https://citydrinks.com/p/old-monk-7-years-old-75cl-3032",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Ballantine’s Finest Scotch Whisky",
     "brand": "Ballantine’s",
     "category": "Whisky",
     "size_ml": 750,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/2017_Ballantine%27s_Finest.jpg/500px-2017_Ballantine%27s_Finest.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:2017 Ballantine's Finest.jpg"
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/8343d056-2bce-4d1a-b9c7-486be43e8687.webp",
+    "image_source_title": "https://citydrinks.com/p/ballantines-finest-1-14-ltrs-2263",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Absolut Vodka",
     "brand": "Absolut",
     "category": "Vodka",
     "size_ml": 750,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Absolut_Vanilia_Vodka_01.tif/lossy-page1-500px-Absolut_Vanilia_Vodka_01.tif.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:Absolut Vanilia Vodka 01.tif"
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/7388fd7f-28f0-40f9-8f04-8f6650d1cdbe.webp",
+    "image_source_title": "https://citydrinks.com/p/absolut---blue-714",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Appleton Estate 12 Year Old Rum",
     "brand": "Appleton Estate",
     "category": "Rum",
     "size_ml": 750,
-    "image_source_url": null,
-    "image_source_title": null
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/faf19fe3-de7a-48d1-bc4f-87722a122835.webp",
+    "image_source_title": "https://citydrinks.com/p/appleton-estate---signature-blend-1823",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Chivas Regal 12 Year Old Scotch Whisky",
     "brand": "Chivas Regal",
     "category": "Whisky",
     "size_ml": 750,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Chivas_Regal_12_Years_Old.jpg/500px-Chivas_Regal_12_Years_Old.jpg",
-    "image_source_title": "Public product image"
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/60810449-6e1d-45b5-ad54-f8afa538f33c.webp",
+    "image_source_title": "https://citydrinks.com/p/chivas-regal-12-years-old-1335",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Chivas Regal 18 Year Old Scotch Whisky",
     "brand": "Chivas Regal",
     "category": "Whisky",
     "size_ml": 750,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Chivas_Regal_18_Year_Old.jpg/500px-Chivas_Regal_18_Year_Old.jpg",
-    "image_source_title": "Public product image"
+    "image_source_url": "https://s3.ap-south-1.amazonaws.com/catalog-india.citydrinks.com/products/15515008-2301-4a1b-aa4d-58d68f2a9ffe.webp",
+    "image_source_title": "https://citydrinks.com/p/chivas-regal-18-years-old-1035",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Johnnie Walker Black Label Scotch Whisky",
     "brand": "Johnnie Walker",
     "category": "Whisky",
     "size_ml": 750,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Johnnie_Walker_Black_Label_Limited_edition2.JPG/500px-Johnnie_Walker_Black_Label_Limited_edition2.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:Johnnie Walker Black Label Limited edition2.JPG"
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/3d1f63ee-9541-47c0-9f86-e7f7fed041c1.jpeg",
+    "image_source_title": "https://citydrinks.com/p/johnnie-walker-black-label-12-pack-5601",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Johnnie Walker Red Label Scotch Whisky",
     "brand": "Johnnie Walker",
     "category": "Whisky",
     "size_ml": 750,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Johnnie_Walker_Red_Label_Blended_Scotch_Whisky_01.jpg/500px-Johnnie_Walker_Red_Label_Blended_Scotch_Whisky_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:Johnnie Walker Red Label Blended Scotch Whisky 01.jpg"
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/42181fb7-2ad7-4d30-99ac-f9c4ff047a3c.webp",
+    "image_source_title": "https://citydrinks.com/p/johnnie-walker-red-label-1042",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Johnnie Walker Double Black Scotch Whisky",
     "brand": "Johnnie Walker",
     "category": "Whisky",
     "size_ml": 750,
-    "image_source_url": null,
-    "image_source_title": null
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/79c817e4-e430-45ca-988c-ffbbe4bf84a9.webp",
+    "image_source_title": "https://citydrinks.com/p/johnnie-walker-double-black-1039",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Kahlúa Coffee Liqueur",
     "brand": "Kahlúa",
     "category": "Liqueur",
     "size_ml": 750,
-    "image_source_url": null,
-    "image_source_title": null
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/5ffc1e61-722f-4abe-b597-d1d8421a79f1.webp",
+    "image_source_title": "https://citydrinks.com/p/kahlua-coffee-liqueur-947",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Bombay Sapphire Gin",
     "brand": "Bombay Sapphire",
     "category": "Gin",
     "size_ml": 750,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Assorted_gin_bottles_on_a_store_shelf.jpg/500px-Assorted_gin_bottles_on_a_store_shelf.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:Assorted gin bottles on a store shelf.jpg"
+    "image_source_url": "https://s3.ap-south-1.amazonaws.com/catalog-india.citydrinks.com/products/00ee3715-80f1-4856-917a-5a4567b0b631.webp",
+    "image_source_title": "https://citydrinks.com/p/bombay-sapphire---london-dry-1330",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Jose Cuervo Especial Silver Tequila",
     "brand": "Jose Cuervo",
     "category": "Tequila",
     "size_ml": 750,
-    "image_source_url": null,
-    "image_source_title": null
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/ba143590-1d66-4f9f-ae76-049ce1ece2ec.webp",
+    "image_source_title": "https://citydrinks.com/p/jose-cuervo-especial---tequila-silver-996",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Glenfiddich Single Malt Scotch Whisky",
     "brand": "Glenfiddich",
     "category": "Whisky",
     "size_ml": 750,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Scotch_whiskies.jpg/500px-Scotch_whiskies.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:Scotch whiskies.jpg"
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/398adb33-2293-46ae-b541-1e999a5c62f0.webp",
+    "image_source_title": "https://citydrinks.com/p/glenfiddich-12-years-old-1076",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Nemiroff Vodka",
     "brand": "Nemiroff",
     "category": "Vodka",
     "size_ml": 750,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Nemiroff_Horilka.jpg/500px-Nemiroff_Horilka.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:Nemiroff Horilka.jpg"
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/bc901d65-c9df-4208-9b5d-2cdf8036835d.webp",
+    "image_source_title": "https://citydrinks.com/p/nemiroff-original-vodka-1000-ml-4057",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "The Glenlivet Single Malt Scotch Whisky",
     "brand": "The Glenlivet",
     "category": "Whisky",
     "size_ml": 750,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Glenlivet_Single_Malt_Scotch_Whisky_French_Oak_Reserve_15_years_old.jpg/500px-Glenlivet_Single_Malt_Scotch_Whisky_French_Oak_Reserve_15_years_old.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:Glenlivet Single Malt Scotch Whisky French Oak Reserve 15 years old.jpg"
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/675abdf2-3f52-4dfd-8300-53f6b79904cb.webp",
+    "image_source_title": "https://citydrinks.com/p/the-glenlivet-12-years-old---double-oak-1075",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Patrón Silver Tequila",
     "brand": "Patrón",
     "category": "Tequila",
     "size_ml": 750,
-    "image_source_url": "https://images.openfoodfacts.org/images/products/072/173/300/1125/front_fr.5.400.jpg",
-    "image_source_title": "Public product image"
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/0b0645b7-b212-4176-9b0c-52e0cfed1b4a.webp",
+    "image_source_title": "https://citydrinks.com/p/patron---tequila-silver-989",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Jacob’s Creek Red Wine",
     "brand": "Jacob’s Creek",
     "category": "Wine",
     "size_ml": 750,
-    "image_source_url": null,
-    "image_source_title": null
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/de7f1c49-894c-42d1-9ce4-b176b3692418.webp",
+    "image_source_title": "https://citydrinks.com/p/jacobs-creek-shiraz-cabernet-2797",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Red Wine",
     "brand": "House Red Wine",
     "category": "Wine",
     "size_ml": 750,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Dao_red_wine.jpg/500px-Dao_red_wine.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:Dao red wine.jpg"
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/a41c3ee4-c410-4522-a127-13544f8cfa13.webp",
+    "image_source_title": "https://citydrinks.com/p/san-simon-red-wine-3581",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "White Wine",
     "brand": "House White Wine",
     "category": "Wine",
     "size_ml": 750,
-    "image_source_url": null,
-    "image_source_title": null
+    "image_source_url": "https://api.mircate.com/5p1hp1d2t/CALL/PIMAPI/getImage/jux9er4tf08?filename=jux9er4tf08-9dcde22173ee49c3a5a2577f9afe9fcd.png&quality=100",
+    "image_source_title": "https://www.mmihomedelivery.ae/product/plagios-sideways-white",
+    "image_source": "MMI Home Delivery"
   },
   {
     "product_name": "Jägermeister Herbal Liqueur",
     "brand": "Jägermeister",
     "category": "Liqueur",
     "size_ml": 700,
-    "image_source_url": "https://images.openfoodfacts.org/images/products/406/770/001/3019/front_en.11.400.jpg",
-    "image_source_title": "Public product image"
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/6c71a752-0be6-4505-85d6-a206514a8975.webp",
+    "image_source_title": "https://citydrinks.com/p/jagermeister-942",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "J&B Rare Scotch Whisky",
     "brand": "J&B",
     "category": "Whisky",
     "size_ml": 750,
-    "image_source_url": null,
-    "image_source_title": null
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/9e178797-1d98-4b2c-8e58-a07e3c90a87e.webp",
+    "image_source_title": "https://citydrinks.com/p/j-b-rare-justerini-brooks-1046",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "St-Rémy VSOP Brandy",
     "brand": "St-Rémy",
     "category": "Brandy",
     "size_ml": 750,
-    "image_source_url": null,
-    "image_source_title": null
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/d5337b7f-3643-4fed-8dce-8c4a29003889.webp",
+    "image_source_title": "https://citydrinks.com/p/st-remy-vsop-70cl-2275",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Monkey Shoulder Blended Malt Scotch Whisky",
     "brand": "Monkey Shoulder",
     "category": "Whisky",
     "size_ml": 750,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/HK_TST_%E5%B0%96%E6%B2%99%E5%92%80_Tsim_Sha_Tsui_%E6%B2%B3%E5%85%A7%E9%81%93_18_Hanoi_Road_%E8%B3%BC%E7%89%A9%E8%97%9D%E8%A1%93%E9%A4%A8_K11_mall_shop_wines_September_2020_SS2_04.jpg/500px-HK_TST_%E5%B0%96%E6%B2%99%E5%92%80_Tsim_Sha_Tsui_%E6%B2%B3%E5%85%A7%E9%81%93_18_Hanoi_Road_%E8%B3%BC%E7%89%A9%E8%97%9D%E8%A1%93%E9%A4%A8_K11_mall_shop_wines_September_2020_SS2_04.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:HK TST 尖沙咀 Tsim Sha Tsui 河內道 18 Hanoi Road 購物藝術館 K11 mall shop wines September 2020 SS2 04.jpg"
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/d5e3a3e0-0440-455d-9edf-636acaa198ae.webp",
+    "image_source_title": "https://citydrinks.com/p/monkey-shoulder---original-433",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Hennessy VSOP Cognac",
     "brand": "Hennessy",
     "category": "Cognac",
     "size_ml": 750,
-    "image_source_url": null,
-    "image_source_title": null
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/b2ce7b7e-b1cc-4841-a41c-38ca86a8b32d.webp",
+    "image_source_title": "https://citydrinks.com/p/hennessy---vsop-1386",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Magic Moments Vodka",
     "brand": "Magic Moments",
     "category": "Vodka",
     "size_ml": 750,
-    "image_source_url": null,
-    "image_source_title": null
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/54368e91-82c8-4390-91e9-2c3da70f13ce.webp",
+    "image_source_title": "https://citydrinks.com/p/magic-moments-vodka-75cl-2884",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Beefeater London Dry Gin",
     "brand": "Beefeater",
     "category": "Gin",
     "size_ml": 750,
-    "image_source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/HK_SKD_Sai_Kung_District_Lohas_Park_mall_shop_%E5%84%AA%E5%93%81_BestMart360_Store_wines_July_2021_SS2_02.jpg/500px-HK_SKD_Sai_Kung_District_Lohas_Park_mall_shop_%E5%84%AA%E5%93%81_BestMart360_Store_wines_July_2021_SS2_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-    "image_source_title": "File:HK SKD Sai Kung District Lohas Park mall shop 優品 BestMart360 Store wines July 2021 SS2 02.jpg"
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/e3dc5493-f304-4230-aafd-c437b8930245.webp",
+    "image_source_title": "https://citydrinks.com/p/beefeater---london-dry-924",
+    "image_source": "CityDrinks"
   },
   {
     "product_name": "Indri Single Malt Indian Whisky",
     "brand": "Indri",
     "category": "Whisky",
     "size_ml": 750,
-    "image_source_url": null,
-    "image_source_title": null
+    "image_source_url": "https://s3.me-central-1.amazonaws.com/catalog.citydrinks.com/products/03bd9cdd-6e3f-4116-a22b-6b4c2ede8361.webp",
+    "image_source_title": "https://citydrinks.com/p/indri-single-malt-indian-whisky---trini-46-6x70cl-2075",
+    "image_source": "CityDrinks"
   }
 ]
