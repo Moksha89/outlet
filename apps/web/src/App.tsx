@@ -387,11 +387,13 @@ function ProductsView({
 }
 
 function ProductForm({ product, onSaved }: { product?: Product; onSaved: () => Promise<void> }) {
-  const fields = [
-    'product_name', 'brand', 'category', 'size_ml', 'bottles_per_carton',
-    'purchase_price_per_bottle', 'selling_price_per_bottle', 'carton_purchase_price',
-    'carton_selling_price', 'full_price', 'half_price', 'quarter_price',
-    'current_stock_bottles', 'minimum_stock_bottles', 'barcode',
+  const productFields = ['product_name', 'brand', 'category', 'size_ml', 'bottles_per_carton', 'minimum_stock_bottles', 'barcode'];
+  const unitFields = [
+    ['Carton', 'carton_stock_count', 'carton_purchase_price', 'carton_selling_price'],
+    ['Full bottle', 'full_bottles_count', 'full_purchase_price', 'full_price'],
+    ['Half bottle', 'half_bottles_count', 'half_purchase_price', 'half_price'],
+    ['Quarter bottle', 'quarter_bottles_count', 'quarter_purchase_price', 'quarter_price'],
+    ['1 Liter bottle', 'liter_bottles_count', 'liter_purchase_price', 'liter_selling_price'],
   ];
   return (
     <form className="formGrid" onSubmit={async (e) => {
@@ -401,7 +403,7 @@ function ProductForm({ product, onSaved }: { product?: Product; onSaved: () => P
       else await api.post('/v1/products', form);
       await onSaved();
     }}>
-      {fields.map((field) => (
+      {productFields.map((field) => (
         <label key={field}>
           {human(field)}
           <input
@@ -410,6 +412,17 @@ function ProductForm({ product, onSaved }: { product?: Product; onSaved: () => P
             defaultValue={product ? String(product[field as keyof Product] ?? '') : numericProductFields.has(field) ? '0' : ''}
           />
         </label>
+      ))}
+      <label>Default Bottle Count<input name="current_stock_bottles" type="number" min="0" step="0.01" defaultValue={product?.current_stock_bottles ?? 0} /></label>
+      <label>Bottle Purchase Price<input name="purchase_price_per_bottle" type="number" min="0" step="0.01" defaultValue={product?.purchase_price_per_bottle ?? 0} /></label>
+      <label>Bottle Selling Price<input name="selling_price_per_bottle" type="number" min="0" step="0.01" defaultValue={product?.selling_price_per_bottle ?? 0} /></label>
+      {unitFields.map(([label, countField, purchaseField, sellingField]) => (
+        <fieldset className="unitFieldset" key={label}>
+          <legend>{label}</legend>
+          <label>Count / Quantity<input name={countField} type="number" min="0" step="0.01" defaultValue={product ? String(product[countField as keyof Product] ?? 0) : '0'} /></label>
+          <label>Purchase Price<input name={purchaseField} type="number" min="0" step="0.01" defaultValue={product ? String(product[purchaseField as keyof Product] ?? 0) : '0'} /></label>
+          <label>Selling Price<input name={sellingField} type="number" min="0" step="0.01" defaultValue={product ? String(product[sellingField as keyof Product] ?? 0) : '0'} /></label>
+        </fieldset>
       ))}
       <label>Status
         <select name="status" defaultValue={product?.status ?? 'ACTIVE'}>
@@ -426,8 +439,10 @@ function ProductForm({ product, onSaved }: { product?: Product; onSaved: () => P
 
 const numericProductFields = new Set([
   'size_ml', 'bottles_per_carton', 'purchase_price_per_bottle', 'selling_price_per_bottle',
-  'carton_purchase_price', 'carton_selling_price', 'full_price', 'half_price', 'quarter_price',
-  'current_stock_bottles', 'minimum_stock_bottles',
+  'carton_purchase_price', 'carton_selling_price', 'carton_stock_count', 'full_purchase_price',
+  'full_price', 'full_bottles_count', 'half_purchase_price', 'half_price', 'half_bottles_count',
+  'quarter_purchase_price', 'quarter_price', 'quarter_bottles_count', 'liter_purchase_price',
+  'liter_selling_price', 'liter_bottles_count', 'current_stock_bottles', 'minimum_stock_bottles',
 ]);
 
 function StockForm({ product, type, onSaved }: { product: Product; type: 'in' | 'out'; onSaved: () => Promise<void> }) {
@@ -500,17 +515,20 @@ function OutletForm({ outlet, onSaved }: { outlet?: Outlet; onSaved: () => Promi
     <form className="inlineForm" onSubmit={async (e) => {
       e.preventDefault();
       const body = Object.fromEntries(new FormData(e.currentTarget));
-      if (outlet) await api.patch(`/v1/outlets/${outlet.id}`, body);
-      else await api.post('/v1/outlets', body);
+      if (outlet) {
+        await api.patch(`/v1/outlets/${outlet.id}`, body);
+        const password = String(body.password ?? '');
+        if (password) await api.post(`/v1/outlets/${outlet.id}/password`, { password });
+      } else await api.post('/v1/outlets', body);
       e.currentTarget.reset();
       await onSaved();
     }}>
       <input name="name" placeholder="Outlet name" defaultValue={outlet?.name ?? ''} required />
-      <input name="phone" placeholder="Login phone" defaultValue={outlet?.phone ?? ''} />
+      <input name="phone" placeholder="Login phone" defaultValue={outlet?.phone ?? ''} required />
       <input name="address" placeholder="Address" defaultValue={outlet?.address ?? ''} />
       <input name="credit_limit" type="number" min="0" placeholder="Credit limit" defaultValue={outlet?.credit_limit ?? 0} />
-      {!outlet ? <input name="password" placeholder="Password (default 123456)" /> : null}
-      <button className="goldButton small">{outlet ? 'Update outlet' : 'Create outlet'}</button>
+      <input name="password" placeholder={outlet ? 'New password / reset password' : 'Login password (default 123456)'} />
+      <button className="goldButton small">{outlet ? 'Update outlet / password' : 'Create outlet login'}</button>
     </form>
   );
 }

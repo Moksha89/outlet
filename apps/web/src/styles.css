@@ -228,6 +228,16 @@ main { padding: 26px; overflow: auto; }
 }
 .formGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
 .formGrid label { color: #111; }
+.unitFieldset {
+  border: 1px solid #e0d4a8;
+  border-radius: 18px;
+  display: grid;
+  gap: 10px;
+  grid-column: span 3;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 14px;
+}
+.unitFieldset legend { color: var(--dark-gold); font-weight: 900; padding: 0 8px; }
 .panel input, .panel select { background: var(--light); color: #111; border-color: #ddd; }
 .muted { color: var(--text-grey); }
 .warning { color: var(--warning); font-weight: 800; }

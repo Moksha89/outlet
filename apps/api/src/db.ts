@@ -57,9 +57,19 @@ export function initDb(): void {
       selling_price_per_bottle REAL NOT NULL,
       carton_purchase_price REAL NOT NULL,
       carton_selling_price REAL NOT NULL,
+      carton_stock_count REAL NOT NULL DEFAULT 0,
+      full_purchase_price REAL NOT NULL DEFAULT 0,
       full_price REAL NOT NULL,
+      full_bottles_count REAL NOT NULL DEFAULT 0,
+      half_purchase_price REAL NOT NULL DEFAULT 0,
       half_price REAL NOT NULL,
+      half_bottles_count REAL NOT NULL DEFAULT 0,
+      quarter_purchase_price REAL NOT NULL DEFAULT 0,
       quarter_price REAL NOT NULL,
+      quarter_bottles_count REAL NOT NULL DEFAULT 0,
+      liter_purchase_price REAL NOT NULL DEFAULT 0,
+      liter_selling_price REAL NOT NULL DEFAULT 0,
+      liter_bottles_count REAL NOT NULL DEFAULT 0,
       current_stock_bottles REAL NOT NULL DEFAULT 0,
       current_stock_ml REAL NOT NULL DEFAULT 0,
       minimum_stock_bottles REAL NOT NULL DEFAULT 0,
@@ -152,8 +162,30 @@ export function initDb(): void {
     CREATE INDEX IF NOT EXISTS idx_invoices_outlet_status ON invoices(outlet_id, status);
     CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, is_read);
   `);
+  ensureProductColumns();
 
   seed();
+}
+
+function ensureProductColumns(): void {
+  const columns = new Set(
+    db.prepare('PRAGMA table_info(products)').all().map((row) => (row as { name: string }).name),
+  );
+  const additions = [
+    ['carton_stock_count', 'REAL NOT NULL DEFAULT 0'],
+    ['full_purchase_price', 'REAL NOT NULL DEFAULT 0'],
+    ['full_bottles_count', 'REAL NOT NULL DEFAULT 0'],
+    ['half_purchase_price', 'REAL NOT NULL DEFAULT 0'],
+    ['half_bottles_count', 'REAL NOT NULL DEFAULT 0'],
+    ['quarter_purchase_price', 'REAL NOT NULL DEFAULT 0'],
+    ['quarter_bottles_count', 'REAL NOT NULL DEFAULT 0'],
+    ['liter_purchase_price', 'REAL NOT NULL DEFAULT 0'],
+    ['liter_selling_price', 'REAL NOT NULL DEFAULT 0'],
+    ['liter_bottles_count', 'REAL NOT NULL DEFAULT 0'],
+  ];
+  for (const [name, definition] of additions) {
+    if (!columns.has(name)) db.exec(`ALTER TABLE products ADD COLUMN ${name} ${definition}`);
+  }
 }
 
 function seed(): void {
@@ -183,9 +215,11 @@ function seed(): void {
       INSERT INTO products (
         id, product_name, brand, category, size_ml, bottle_image_url, bottles_per_carton,
         purchase_price_per_bottle, selling_price_per_bottle, carton_purchase_price,
-        carton_selling_price, full_price, half_price, quarter_price,
+        carton_selling_price, carton_stock_count, full_purchase_price, full_price, full_bottles_count,
+        half_purchase_price, half_price, half_bottles_count, quarter_purchase_price, quarter_price,
+        quarter_bottles_count, liter_purchase_price, liter_selling_price, liter_bottles_count,
         current_stock_bottles, current_stock_ml, minimum_stock_bottles, status, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'ACTIVE', ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'ACTIVE', ?, ?)
     `);
   for (const product of catalogProducts) {
     const existing = db.prepare('SELECT id FROM products WHERE product_name = ?').get(product.product_name);

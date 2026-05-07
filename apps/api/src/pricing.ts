@@ -21,11 +21,15 @@ export function sellingPrice(product: Product, unit: UnitType): number {
   if (unit === 'HALF') return product.half_price;
   if (unit === 'QUARTER') return product.quarter_price;
   if (unit === 'FULL') return product.full_price;
-  if (unit === 'LITER') return product.selling_price_per_bottle * (1000 / product.size_ml);
+  if (unit === 'LITER') return product.liter_selling_price;
   return product.selling_price_per_bottle;
 }
 
 export function purchaseCost(product: Product, unit: UnitType): number {
   if (unit === 'CARTON') return product.carton_purchase_price;
-  return bottleEquivalent(product, unit, 1) * product.purchase_price_per_bottle;
+  if (unit === 'FULL') return product.full_purchase_price;
+  if (unit === 'HALF') return product.half_purchase_price;
+  if (unit === 'QUARTER') return product.quarter_purchase_price;
+  if (unit === 'LITER') return product.liter_purchase_price;
+  return product.purchase_price_per_bottle;
 }

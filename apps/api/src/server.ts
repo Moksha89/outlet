@@ -172,6 +172,23 @@ app.patch('/v1/outlets/:id', requireAuth, requireRole('ADMIN'), (req, res) => {
   res.json(outlet);
 });
 
+app.post('/v1/outlets/:id/password', requireAuth, requireRole('ADMIN'), (req, res) => {
+  const parsed = z.object({ password: z.string().min(6) }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  const outlet = db.prepare('SELECT * FROM outlets WHERE id = ?').get(req.params.id) as { id: string; name: string; phone: string | null } | undefined;
+  if (!outlet) return res.status(404).json({ error: 'outlet not found' });
+  if (!outlet.phone) return res.status(400).json({ error: 'outlet login phone required before setting password' });
+  const hash = bcrypt.hashSync(parsed.data.password, 10);
+  const user = db.prepare('SELECT id FROM users WHERE outlet_id = ? AND role = ?').get(outlet.id, 'OUTLET') as { id: string } | undefined;
+  if (user) {
+    db.prepare('UPDATE users SET name = ?, phone = ?, password_hash = ? WHERE id = ?').run(outlet.name, outlet.phone, hash, user.id);
+  } else {
+    db.prepare('INSERT INTO users (id, name, phone, password_hash, role, outlet_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+      .run(uuid(), outlet.name, outlet.phone, hash, 'OUTLET', outlet.id, nowIso());
+  }
+  res.json({ ok: true });
+});
+
 const productSchema = z.object({
   product_name: z.string().min(1),
   brand: z.string().min(1),
@@ -182,9 +199,19 @@ const productSchema = z.object({
   selling_price_per_bottle: z.coerce.number().nonnegative(),
   carton_purchase_price: z.coerce.number().nonnegative(),
   carton_selling_price: z.coerce.number().nonnegative(),
+  carton_stock_count: z.coerce.number().nonnegative().default(0),
+  full_purchase_price: z.coerce.number().nonnegative().default(0),
   full_price: z.coerce.number().nonnegative(),
+  full_bottles_count: z.coerce.number().nonnegative().default(0),
+  half_purchase_price: z.coerce.number().nonnegative().default(0),
   half_price: z.coerce.number().nonnegative(),
+  half_bottles_count: z.coerce.number().nonnegative().default(0),
+  quarter_purchase_price: z.coerce.number().nonnegative().default(0),
   quarter_price: z.coerce.number().nonnegative(),
+  quarter_bottles_count: z.coerce.number().nonnegative().default(0),
+  liter_purchase_price: z.coerce.number().nonnegative().default(0),
+  liter_selling_price: z.coerce.number().nonnegative().default(0),
+  liter_bottles_count: z.coerce.number().nonnegative().default(0),
   current_stock_bottles: z.coerce.number().nonnegative().default(0),
   minimum_stock_bottles: z.coerce.number().nonnegative().default(0),
   barcode: z.string().optional().nullable(),
@@ -208,14 +235,19 @@ app.post(
     const data = parsed.data;
     const bottleImage = files.bottle_image?.[0]?.filename ? `/uploads/${files.bottle_image[0].filename}` : null;
     const cartonImage = files.carton_image?.[0]?.filename ? `/uploads/${files.carton_image[0].filename}` : null;
-    const currentStockMl = data.current_stock_bottles * data.size_ml;
+    const currentStockMl = productStockMl(data);
+    const currentStockBottles = currentStockMl / data.size_ml;
     db.prepare(`
       INSERT INTO products (
         id, product_name, brand, category, size_ml, bottle_image_url, carton_image_url,
         bottles_per_carton, purchase_price_per_bottle, selling_price_per_bottle,
-        carton_purchase_price, carton_selling_price, full_price, half_price, quarter_price,
+        carton_purchase_price, carton_selling_price, carton_stock_count,
+        full_purchase_price, full_price, full_bottles_count,
+        half_purchase_price, half_price, half_bottles_count,
+        quarter_purchase_price, quarter_price, quarter_bottles_count,
+        liter_purchase_price, liter_selling_price, liter_bottles_count,
         current_stock_bottles, current_stock_ml, minimum_stock_bottles, barcode, status, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,
       data.product_name,
@@ -229,10 +261,20 @@ app.post(
       data.selling_price_per_bottle,
       data.carton_purchase_price,
       data.carton_selling_price,
+      data.carton_stock_count,
+      data.full_purchase_price,
       data.full_price,
+      data.full_bottles_count,
+      data.half_purchase_price,
       data.half_price,
+      data.half_bottles_count,
+      data.quarter_purchase_price,
       data.quarter_price,
-      data.current_stock_bottles,
+      data.quarter_bottles_count,
+      data.liter_purchase_price,
+      data.liter_selling_price,
+      data.liter_bottles_count,
+      currentStockBottles,
       currentStockMl,
       data.minimum_stock_bottles,
       data.barcode ?? null,
@@ -260,12 +302,17 @@ app.patch(
     const data = parsed.data;
     const bottleImage = files.bottle_image?.[0]?.filename ? `/uploads/${files.bottle_image[0].filename}` : existing.bottle_image_url;
     const cartonImage = files.carton_image?.[0]?.filename ? `/uploads/${files.carton_image[0].filename}` : existing.carton_image_url;
-    const currentStockMl = data.current_stock_bottles * data.size_ml;
+    const currentStockMl = productStockMl(data);
+    const currentStockBottles = currentStockMl / data.size_ml;
     db.prepare(`
       UPDATE products
       SET product_name = ?, brand = ?, category = ?, size_ml = ?, bottle_image_url = ?, carton_image_url = ?,
         bottles_per_carton = ?, purchase_price_per_bottle = ?, selling_price_per_bottle = ?,
-        carton_purchase_price = ?, carton_selling_price = ?, full_price = ?, half_price = ?, quarter_price = ?,
+        carton_purchase_price = ?, carton_selling_price = ?, carton_stock_count = ?,
+        full_purchase_price = ?, full_price = ?, full_bottles_count = ?,
+        half_purchase_price = ?, half_price = ?, half_bottles_count = ?,
+        quarter_purchase_price = ?, quarter_price = ?, quarter_bottles_count = ?,
+        liter_purchase_price = ?, liter_selling_price = ?, liter_bottles_count = ?,
         current_stock_bottles = ?, current_stock_ml = ?, minimum_stock_bottles = ?, barcode = ?, status = ?, updated_at = ?
       WHERE id = ?
     `).run(
@@ -280,10 +327,20 @@ app.patch(
       data.selling_price_per_bottle,
       data.carton_purchase_price,
       data.carton_selling_price,
+      data.carton_stock_count,
+      data.full_purchase_price,
       data.full_price,
+      data.full_bottles_count,
+      data.half_purchase_price,
       data.half_price,
+      data.half_bottles_count,
+      data.quarter_purchase_price,
       data.quarter_price,
-      data.current_stock_bottles,
+      data.quarter_bottles_count,
+      data.liter_purchase_price,
+      data.liter_selling_price,
+      data.liter_bottles_count,
+      currentStockBottles,
       currentStockMl,
       data.minimum_stock_bottles,
       data.barcode ?? null,
@@ -315,7 +372,16 @@ app.post('/v1/products/:id/stock-in', requireAuth, requireRole('ADMIN'), (req, r
   const quantityMl = stockMl(product, parsed.data);
   const quantityBottles = quantityMl / product.size_ml;
   if (quantityMl <= 0) return res.status(400).json({ error: 'stock quantity must be greater than zero' });
-  db.prepare('UPDATE products SET current_stock_bottles = current_stock_bottles + ?, current_stock_ml = current_stock_ml + ?, updated_at = ? WHERE id = ?').run(quantityBottles, quantityMl, nowIso(), product.id);
+  db.prepare(`UPDATE products SET
+      carton_stock_count = carton_stock_count + ?,
+      full_bottles_count = full_bottles_count + ?,
+      half_bottles_count = half_bottles_count + ?,
+      quarter_bottles_count = quarter_bottles_count + ?,
+      liter_bottles_count = liter_bottles_count + ?,
+      current_stock_bottles = current_stock_bottles + ?,
+      current_stock_ml = current_stock_ml + ?,
+      updated_at = ?
+    WHERE id = ?`).run(parsed.data.cartons, parsed.data.full_bottles + parsed.data.bottles, parsed.data.half_bottles, parsed.data.quarter_bottles, parsed.data.liter_bottles, quantityBottles, quantityMl, nowIso(), product.id);
   db.prepare('INSERT INTO stock_movements (id, product_id, type, quantity_bottles, quantity_ml, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)').run(uuid(), product.id, 'IN', quantityBottles, quantityMl, parsed.data.note ?? null, nowIso());
   const updated = db.prepare('SELECT * FROM products WHERE id = ?').get(product.id);
   emitBusinessUpdate('inventory.updated', updated);
@@ -331,7 +397,16 @@ app.post('/v1/products/:id/stock-out', requireAuth, requireRole('ADMIN'), (req, 
   const quantityBottles = quantityMl / product.size_ml;
   if (quantityMl <= 0) return res.status(400).json({ error: 'stock quantity must be greater than zero' });
   if (quantityMl > product.current_stock_ml) return res.status(400).json({ error: 'stock out exceeds available stock' });
-  db.prepare('UPDATE products SET current_stock_bottles = current_stock_bottles - ?, current_stock_ml = current_stock_ml - ?, updated_at = ? WHERE id = ?').run(quantityBottles, quantityMl, nowIso(), product.id);
+  db.prepare(`UPDATE products SET
+      carton_stock_count = MAX(0, carton_stock_count - ?),
+      full_bottles_count = MAX(0, full_bottles_count - ?),
+      half_bottles_count = MAX(0, half_bottles_count - ?),
+      quarter_bottles_count = MAX(0, quarter_bottles_count - ?),
+      liter_bottles_count = MAX(0, liter_bottles_count - ?),
+      current_stock_bottles = current_stock_bottles - ?,
+      current_stock_ml = current_stock_ml - ?,
+      updated_at = ?
+    WHERE id = ?`).run(parsed.data.cartons, parsed.data.full_bottles + parsed.data.bottles, parsed.data.half_bottles, parsed.data.quarter_bottles, parsed.data.liter_bottles, quantityBottles, quantityMl, nowIso(), product.id);
   db.prepare('INSERT INTO stock_movements (id, product_id, type, quantity_bottles, quantity_ml, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)').run(uuid(), product.id, 'OUT', quantityBottles, quantityMl, parsed.data.note ?? null, nowIso());
   const updated = db.prepare('SELECT * FROM products WHERE id = ?').get(product.id);
   emitBusinessUpdate('inventory.updated', updated);
@@ -345,6 +420,16 @@ function stockMl(product: Product, stock: z.infer<typeof stockSchema>): number {
     stock.half_bottles * (product.size_ml / 2) +
     stock.quarter_bottles * (product.size_ml / 4) +
     stock.liter_bottles * 1000
+  );
+}
+
+function productStockMl(product: z.infer<typeof productSchema>): number {
+  return (
+    product.carton_stock_count * product.bottles_per_carton * product.size_ml +
+    (product.full_bottles_count + product.current_stock_bottles) * product.size_ml +
+    product.half_bottles_count * (product.size_ml / 2) +
+    product.quarter_bottles_count * (product.size_ml / 4) +
+    product.liter_bottles_count * 1000
   );
 }
 
@@ -477,9 +562,28 @@ function createOrder(outletId: string, userId: string, items: OrderItemInput[]) 
 }
 
 function deductStockForOrder(orderId: string): void {
-  const items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(orderId) as { product_id: string; stock_deducted_bottles: number; stock_deducted_ml: number }[];
+  const items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(orderId) as { product_id: string; unit_type: UnitType; quantity: number; stock_deducted_bottles: number; stock_deducted_ml: number }[];
   for (const item of items) {
-    db.prepare('UPDATE products SET current_stock_bottles = current_stock_bottles - ?, current_stock_ml = current_stock_ml - ?, updated_at = ? WHERE id = ?').run(item.stock_deducted_bottles, item.stock_deducted_ml, nowIso(), item.product_id);
+    db.prepare(`UPDATE products SET
+        carton_stock_count = MAX(0, carton_stock_count - ?),
+        full_bottles_count = MAX(0, full_bottles_count - ?),
+        half_bottles_count = MAX(0, half_bottles_count - ?),
+        quarter_bottles_count = MAX(0, quarter_bottles_count - ?),
+        liter_bottles_count = MAX(0, liter_bottles_count - ?),
+        current_stock_bottles = current_stock_bottles - ?,
+        current_stock_ml = current_stock_ml - ?,
+        updated_at = ?
+      WHERE id = ?`).run(
+      item.unit_type === 'CARTON' ? item.quantity : 0,
+      item.unit_type === 'BOTTLE' || item.unit_type === 'FULL' ? item.quantity : 0,
+      item.unit_type === 'HALF' ? item.quantity : 0,
+      item.unit_type === 'QUARTER' ? item.quantity : 0,
+      item.unit_type === 'LITER' ? item.quantity : 0,
+      item.stock_deducted_bottles,
+      item.stock_deducted_ml,
+      nowIso(),
+      item.product_id,
+    );
     db.prepare('INSERT INTO stock_movements (id, product_id, type, quantity_bottles, quantity_ml, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)').run(uuid(), item.product_id, 'OUT', item.stock_deducted_bottles, item.stock_deducted_ml, `Order ${orderId}`, nowIso());
   }
 }
