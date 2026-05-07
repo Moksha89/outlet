@@ -369,7 +369,7 @@ function ProductsView({
                 <span>Quarter {money(product.quarter_price)}</span>
               </div>
               <p className={product.current_stock_bottles <= product.minimum_stock_bottles ? 'danger' : 'muted'}>
-                Stock: {product.current_stock_bottles} bottles / {(product.current_stock_bottles / product.bottles_per_carton).toFixed(1)} cartons
+                Stock: {product.current_stock_bottles} full bottles / {(product.current_stock_bottles / product.bottles_per_carton).toFixed(1)} cartons / {(product.current_stock_ml / 1000).toFixed(2)} liters
               </p>
               {user.role === 'ADMIN' ? (
                 <div className="actions">
@@ -440,7 +440,10 @@ function StockForm({ product, type, onSaved }: { product: Product; type: 'in' | 
     }}>
       <strong>{type === 'in' ? 'Stock IN' : 'Stock OUT'}: {product.product_name}</strong>
       <input name="cartons" type="number" min="0" step="0.01" placeholder="Cartons" defaultValue="0" />
-      <input name="bottles" type="number" min="0" step="0.01" placeholder="Bottles" defaultValue="0" />
+      <input name="full_bottles" type="number" min="0" step="0.01" placeholder="Full bottles" defaultValue="0" />
+      <input name="half_bottles" type="number" min="0" step="0.01" placeholder="Half bottles" defaultValue="0" />
+      <input name="quarter_bottles" type="number" min="0" step="0.01" placeholder="Quarter bottles" defaultValue="0" />
+      <input name="liter_bottles" type="number" min="0" step="0.01" placeholder="1 Liter bottles" defaultValue="0" />
       <input name="note" placeholder="Note / reason" />
       <button className="goldButton small">{type === 'in' ? 'Add stock' : 'Remove stock'}</button>
     </form>
@@ -563,7 +566,7 @@ function OrderForm({ user, products, outlets, onSaved }: { user: User; products:
     }}>
       {user.role === 'ADMIN' ? <select value={outletId} onChange={(e) => setOutletId(e.target.value)}>{outlets.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}</select> : null}
       <select value={productId} onChange={(e) => setProductId(e.target.value)}>{products.map((p) => <option key={p.id} value={p.id}>{p.product_name}</option>)}</select>
-      <select value={unit} onChange={(e) => setUnit(e.target.value as UnitType)}>{['BOTTLE', 'CARTON', 'FULL', 'HALF', 'QUARTER'].map((u) => <option key={u}>{u}</option>)}</select>
+      <select value={unit} onChange={(e) => setUnit(e.target.value as UnitType)}>{['BOTTLE', 'CARTON', 'FULL', 'HALF', 'QUARTER', 'LITER'].map((u) => <option key={u}>{u}</option>)}</select>
       <input type="number" min="1" value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} />
       <button className="goldButton small">Place Order</button>
     </form>

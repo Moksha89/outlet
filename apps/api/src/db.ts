@@ -22,6 +22,8 @@ export function toRupees(value: number): number {
 
 export function initDb(): void {
   db.exec(`
+    PRAGMA ignore_check_constraints = ON;
+
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -96,7 +98,7 @@ export function initDb(): void {
       id TEXT PRIMARY KEY,
       order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
       product_id TEXT NOT NULL REFERENCES products(id),
-      unit_type TEXT NOT NULL CHECK (unit_type IN ('BOTTLE', 'CARTON', 'FULL', 'HALF', 'QUARTER')),
+      unit_type TEXT NOT NULL CHECK (unit_type IN ('BOTTLE', 'CARTON', 'FULL', 'HALF', 'QUARTER', 'LITER')),
       quantity REAL NOT NULL,
       unit_selling_price REAL NOT NULL,
       unit_purchase_cost REAL NOT NULL,

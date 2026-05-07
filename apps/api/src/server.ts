@@ -297,13 +297,24 @@ app.patch(
   },
 );
 
+const stockSchema = z.object({
+  cartons: z.coerce.number().nonnegative().default(0),
+  full_bottles: z.coerce.number().nonnegative().default(0),
+  half_bottles: z.coerce.number().nonnegative().default(0),
+  quarter_bottles: z.coerce.number().nonnegative().default(0),
+  liter_bottles: z.coerce.number().nonnegative().default(0),
+  bottles: z.coerce.number().nonnegative().default(0),
+  note: z.string().optional(),
+});
+
 app.post('/v1/products/:id/stock-in', requireAuth, requireRole('ADMIN'), (req, res) => {
-  const parsed = z.object({ cartons: z.coerce.number().default(0), bottles: z.coerce.number().default(0), note: z.string().optional() }).safeParse(req.body);
+  const parsed = stockSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'invalid stock payload' });
   const product = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id) as Product | undefined;
   if (!product) return res.status(404).json({ error: 'product not found' });
-  const quantityBottles = parsed.data.bottles + parsed.data.cartons * product.bottles_per_carton;
-  const quantityMl = quantityBottles * product.size_ml;
+  const quantityMl = stockMl(product, parsed.data);
+  const quantityBottles = quantityMl / product.size_ml;
+  if (quantityMl <= 0) return res.status(400).json({ error: 'stock quantity must be greater than zero' });
   db.prepare('UPDATE products SET current_stock_bottles = current_stock_bottles + ?, current_stock_ml = current_stock_ml + ?, updated_at = ? WHERE id = ?').run(quantityBottles, quantityMl, nowIso(), product.id);
   db.prepare('INSERT INTO stock_movements (id, product_id, type, quantity_bottles, quantity_ml, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)').run(uuid(), product.id, 'IN', quantityBottles, quantityMl, parsed.data.note ?? null, nowIso());
   const updated = db.prepare('SELECT * FROM products WHERE id = ?').get(product.id);
@@ -312,14 +323,14 @@ app.post('/v1/products/:id/stock-in', requireAuth, requireRole('ADMIN'), (req, r
 });
 
 app.post('/v1/products/:id/stock-out', requireAuth, requireRole('ADMIN'), (req, res) => {
-  const parsed = z.object({ cartons: z.coerce.number().default(0), bottles: z.coerce.number().default(0), note: z.string().optional() }).safeParse(req.body);
+  const parsed = stockSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'invalid stock payload' });
   const product = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id) as Product | undefined;
   if (!product) return res.status(404).json({ error: 'product not found' });
-  const quantityBottles = parsed.data.bottles + parsed.data.cartons * product.bottles_per_carton;
-  if (quantityBottles <= 0) return res.status(400).json({ error: 'stock quantity must be greater than zero' });
-  if (quantityBottles > product.current_stock_bottles) return res.status(400).json({ error: 'stock out exceeds available stock' });
-  const quantityMl = quantityBottles * product.size_ml;
+  const quantityMl = stockMl(product, parsed.data);
+  const quantityBottles = quantityMl / product.size_ml;
+  if (quantityMl <= 0) return res.status(400).json({ error: 'stock quantity must be greater than zero' });
+  if (quantityMl > product.current_stock_ml) return res.status(400).json({ error: 'stock out exceeds available stock' });
   db.prepare('UPDATE products SET current_stock_bottles = current_stock_bottles - ?, current_stock_ml = current_stock_ml - ?, updated_at = ? WHERE id = ?').run(quantityBottles, quantityMl, nowIso(), product.id);
   db.prepare('INSERT INTO stock_movements (id, product_id, type, quantity_bottles, quantity_ml, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)').run(uuid(), product.id, 'OUT', quantityBottles, quantityMl, parsed.data.note ?? null, nowIso());
   const updated = db.prepare('SELECT * FROM products WHERE id = ?').get(product.id);
@@ -327,9 +338,19 @@ app.post('/v1/products/:id/stock-out', requireAuth, requireRole('ADMIN'), (req, 
   res.json(updated);
 });
 
+function stockMl(product: Product, stock: z.infer<typeof stockSchema>): number {
+  return (
+    stock.cartons * product.bottles_per_carton * product.size_ml +
+    (stock.full_bottles + stock.bottles) * product.size_ml +
+    stock.half_bottles * (product.size_ml / 2) +
+    stock.quarter_bottles * (product.size_ml / 4) +
+    stock.liter_bottles * 1000
+  );
+}
+
 const orderItemSchema = z.object({
   product_id: z.string(),
-  unit_type: z.enum(['BOTTLE', 'CARTON', 'FULL', 'HALF', 'QUARTER']),
+  unit_type: z.enum(['BOTTLE', 'CARTON', 'FULL', 'HALF', 'QUARTER', 'LITER']),
   quantity: z.coerce.number().positive(),
 });
 

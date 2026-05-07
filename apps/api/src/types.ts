@@ -1,7 +1,7 @@
 import type { Request } from 'express';
 
 export type Role = 'ADMIN' | 'OUTLET';
-export type UnitType = 'BOTTLE' | 'CARTON' | 'FULL' | 'HALF' | 'QUARTER';
+export type UnitType = 'BOTTLE' | 'CARTON' | 'FULL' | 'HALF' | 'QUARTER' | 'LITER';
 export type OrderStatus = 'PLACED' | 'APPROVED' | 'DELIVERED' | 'CANCELLED' | 'REJECTED';
 export type PaymentMode = 'CASH' | 'BANK' | 'CARD';
 export type NotificationType = 'ORDER' | 'BILL' | 'PAYMENT' | 'STOCK' | 'ALERT';
